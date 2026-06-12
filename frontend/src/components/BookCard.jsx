@@ -1,4 +1,4 @@
-const BookCard = ({ book }) => {
+const BookCard = ({ book, onClick }) => {
   const isAvailable = book.Status === 'Available';
   const coverColors = [
     'linear-gradient(135deg, #6366f1, #8b5cf6)',
@@ -14,8 +14,9 @@ const BookCard = ({ book }) => {
     <div className="glass-card animate-fade-in" style={{
       overflow: 'hidden',
       transition: 'all 0.3s ease',
-      cursor: 'default',
+      cursor: onClick ? 'pointer' : 'default',
     }}
+    onClick={onClick}
     onMouseOver={(e) => {
       e.currentTarget.style.transform = 'translateY(-4px)';
       e.currentTarget.style.boxShadow = '0 12px 40px rgba(99,102,241,0.3)';

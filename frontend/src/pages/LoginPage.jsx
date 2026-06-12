@@ -8,6 +8,9 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('Student');
+  const [studentId, setStudentId] = useState('');
+  const [phone, setPhone] = useState('');
+  const [department, setDepartment] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +32,12 @@ const LoginPage = () => {
           setLoading(false);
           return;
         }
-        userData = await register(name, email, password, role);
+        if (role === 'Student' && !studentId.trim()) {
+          setError('Student ID is required');
+          setLoading(false);
+          return;
+        }
+        userData = await register(name, email, password, role, studentId, phone, department);
       }
 
       // Redirect based on role
@@ -222,20 +230,67 @@ const LoginPage = () => {
           </div>
 
           {!isLogin && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
-                Role
-              </label>
-              <select
-                className="select-glass"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                id="select-role"
-              >
-                <option value="Student">Student</option>
-                <option value="Admin">Admin</option>
-              </select>
-            </div>
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                  Role
+                </label>
+                <select
+                  className="select-glass"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  id="select-role"
+                >
+                  <option value="Student">Student</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+
+              {role === 'Student' && (
+                <>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                      Student ID
+                    </label>
+                    <input
+                      type="text"
+                      className="input-glass"
+                      placeholder="e.g. STU-2026-001"
+                      value={studentId}
+                      onChange={(e) => setStudentId(e.target.value)}
+                      id="input-studentid"
+                      required
+                    />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      className="input-glass"
+                      placeholder="e.g. +1-555-0199"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      id="input-phone"
+                    />
+                  </div>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                      Department
+                    </label>
+                    <input
+                      type="text"
+                      className="input-glass"
+                      placeholder="e.g. Computer Science"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      id="input-department"
+                    />
+                  </div>
+                </>
+              )}
+            </>
           )}
 
           <button

@@ -35,8 +35,8 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const register = async (name, email, password, role) => {
-    const res = await API.post('/auth/register', { name, email, password, role });
+  const register = async (name, email, password, role, studentId, phone, department) => {
+    const res = await API.post('/auth/register', { name, email, password, role, studentId, phone, department });
     const { token: jwt, user: userData } = res.data;
     setToken(jwt);
     setUser(userData);

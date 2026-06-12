@@ -6,7 +6,7 @@ const pool = require('../config/db');
 /**
  * GET /api/books
  * List all books with optional search filtering
- * Query params: ?search=term (searches title, author, ISBN)
+ * Query params: ?search=term (searches title, author, ISBN, category, publisher)
  */
 const getAllBooks = async (req, res) => {
   try {
@@ -15,9 +15,9 @@ const getAllBooks = async (req, res) => {
     let params = [];
 
     if (search) {
-      query += ' WHERE Title LIKE ? OR Author LIKE ? OR ISBN LIKE ?';
+      query += ' WHERE Title LIKE ? OR Author LIKE ? OR ISBN LIKE ? OR Category LIKE ? OR Publisher LIKE ?';
       const term = `%${search}%`;
-      params = [term, term, term];
+      params = [term, term, term, term, term];
     }
 
     query += ' ORDER BY Title ASC';
@@ -53,7 +53,7 @@ const getBookById = async (req, res) => {
  */
 const createBook = async (req, res) => {
   try {
-    const { title, author, isbn, quantity } = req.body;
+    const { title, author, isbn, quantity, description, category, publisher, publishYear, coverImage } = req.body;
 
     if (!title || !author || !isbn) {
       return res.status(400).json({ error: 'Title, author, and ISBN are required.' });
@@ -69,13 +69,36 @@ const createBook = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO Books (Title, Author, ISBN, Quantity, Status) VALUES (?, ?, ?, ?, ?)',
-      [title, author, isbn, qty, status]
+      'INSERT INTO Books (Title, Author, ISBN, Quantity, Status, Description, Category, Publisher, PublishYear, CoverImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        title, 
+        author, 
+        isbn, 
+        qty, 
+        status, 
+        description || null, 
+        category || null, 
+        publisher || null, 
+        publishYear ? parseInt(publishYear) : null, 
+        coverImage || null
+      ]
     );
 
     res.status(201).json({
       message: 'Book added successfully',
-      book: { BookID: result.insertId, Title: title, Author: author, ISBN: isbn, Quantity: qty, Status: status }
+      book: { 
+        BookID: result.insertId, 
+        Title: title, 
+        Author: author, 
+        ISBN: isbn, 
+        Quantity: qty, 
+        Status: status,
+        Description: description || null,
+        Category: category || null,
+        Publisher: publisher || null,
+        PublishYear: publishYear ? parseInt(publishYear) : null,
+        CoverImage: coverImage || null
+      }
     });
   } catch (err) {
     console.error('CreateBook error:', err.message);
@@ -89,7 +112,7 @@ const createBook = async (req, res) => {
  */
 const updateBook = async (req, res) => {
   try {
-    const { title, author, isbn, quantity } = req.body;
+    const { title, author, isbn, quantity, description, category, publisher, publishYear, coverImage } = req.body;
     const bookId = req.params.id;
 
     // Check book exists
@@ -98,11 +121,12 @@ const updateBook = async (req, res) => {
       return res.status(404).json({ error: 'Book not found.' });
     }
 
-    const qty = parseInt(quantity) ?? existing[0].Quantity;
+    const book = existing[0];
+    const qty = quantity !== undefined ? parseInt(quantity) : book.Quantity;
     const status = qty > 0 ? 'Available' : 'Out of Stock';
 
     // Check ISBN uniqueness (exclude current book)
-    if (isbn) {
+    if (isbn && isbn !== book.ISBN) {
       const [isbnCheck] = await pool.query(
         'SELECT BookID FROM Books WHERE ISBN = ? AND BookID != ?',
         [isbn, bookId]
@@ -113,13 +137,21 @@ const updateBook = async (req, res) => {
     }
 
     await pool.query(
-      'UPDATE Books SET Title = ?, Author = ?, ISBN = ?, Quantity = ?, Status = ? WHERE BookID = ?',
+      `UPDATE Books 
+       SET Title = ?, Author = ?, ISBN = ?, Quantity = ?, Status = ?, 
+           Description = ?, Category = ?, Publisher = ?, PublishYear = ?, CoverImage = ? 
+       WHERE BookID = ?`,
       [
-        title || existing[0].Title,
-        author || existing[0].Author,
-        isbn || existing[0].ISBN,
+        title || book.Title,
+        author || book.Author,
+        isbn || book.ISBN,
         qty,
         status,
+        description !== undefined ? description : book.Description,
+        category !== undefined ? category : book.Category,
+        publisher !== undefined ? publisher : book.Publisher,
+        publishYear !== undefined ? (publishYear ? parseInt(publishYear) : null) : book.PublishYear,
+        coverImage !== undefined ? coverImage : book.CoverImage,
         bookId
       ]
     );

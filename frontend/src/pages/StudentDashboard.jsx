@@ -4,6 +4,7 @@ import API from '../api/axios';
 import Navbar from '../components/Navbar';
 import BookCard from '../components/BookCard';
 import StatsCard from '../components/StatsCard';
+import Modal from '../components/Modal';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
@@ -12,6 +13,10 @@ const StudentDashboard = () => {
   const [search, setSearch] = useState('');
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
+
+  // Modal State
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showBookModal, setShowBookModal] = useState(false);
 
   // Fetch books
   useEffect(() => {
@@ -62,6 +67,9 @@ const StudentDashboard = () => {
     if (record.ReturnStatus === 'Returned') return 'returned';
     const due = new Date(record.DueDate);
     const today = new Date();
+    // Set hours to 0 to compare dates accurately
+    due.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
     if (due < today) return 'overdue';
     return 'pending';
   };
@@ -69,6 +77,8 @@ const StudentDashboard = () => {
   const getDaysRemaining = (dueDate) => {
     const due = new Date(dueDate);
     const today = new Date();
+    due.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
     const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
     return diff;
   };
@@ -169,7 +179,14 @@ const StudentDashboard = () => {
               gap: '1rem',
             }}>
               {books.map((book) => (
-                <BookCard key={book.BookID} book={book} />
+                <BookCard 
+                  key={book.BookID} 
+                  book={book} 
+                  onClick={() => {
+                    setSelectedBook(book);
+                    setShowBookModal(true);
+                  }}
+                />
               ))}
             </div>
           )}
@@ -196,7 +213,7 @@ const StudentDashboard = () => {
           ) : history.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
               <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</p>
-              <p>You haven't borrowed any books yet.</p>
+              <p>You haven\'t borrowed any books yet.</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -246,6 +263,123 @@ const StudentDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* ── Book Details Modal ─────────────────────────────── */}
+      {selectedBook && (
+        <Modal
+          isOpen={showBookModal}
+          onClose={() => {
+            setShowBookModal(false);
+            setSelectedBook(null);
+          }}
+          title="Book Details"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '32rem' }}>
+            {/* Cover illustration simulation */}
+            <div style={{
+              height: '10rem',
+              background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
+              borderRadius: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '4rem',
+            }}>
+              📖
+            </div>
+
+            <div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#e2e8f0' }}>{selectedBook.Title}</h3>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>by {selectedBook.Author}</p>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                {selectedBook.Category && (
+                  <span className="badge" style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)' }}>
+                    {selectedBook.Category}
+                  </span>
+                )}
+                <span className={selectedBook.Status === 'Available' ? 'badge badge-available' : 'badge badge-out'}>
+                  {selectedBook.Status === 'Available' ? '✓ Available' : '✗ Out of Stock'}
+                </span>
+              </div>
+            </div>
+
+            {selectedBook.Description && (
+              <div>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Description</h4>
+                <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: 1.5 }}>{selectedBook.Description}</p>
+              </div>
+            )}
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '1rem',
+              background: 'rgba(15,23,42,0.4)',
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(99,102,241,0.1)',
+            }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>ISBN</span>
+                <span style={{ fontSize: '0.85rem', color: '#e2e8f0', fontFamily: 'monospace' }}>{selectedBook.ISBN}</span>
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Available Copies</span>
+                <span style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 700 }}>{selectedBook.Quantity}</span>
+              </div>
+              {selectedBook.Publisher && (
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Publisher</span>
+                  <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{selectedBook.Publisher}</span>
+                </div>
+              )}
+              {selectedBook.PublishYear && (
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Publication Year</span>
+                  <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{selectedBook.PublishYear}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Check Active Loan for this Book */}
+            {(() => {
+              const activeLoan = history.find(r => r.BookID === selectedBook.BookID && r.ReturnStatus === 'Pending');
+              if (activeLoan) {
+                const days = getDaysRemaining(activeLoan.DueDate);
+                const isOverdue = days < 0;
+                return (
+                  <div style={{
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    background: isOverdue ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                    border: `1px solid ${isOverdue ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                    color: isOverdue ? '#f87171' : '#fbbf24',
+                  }}>
+                    <p style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      {isOverdue ? '⚠️ Overdue Loan Detected' : '⏳ Currently Borrowed by You'}
+                    </p>
+                    <p style={{ fontSize: '0.8rem' }}>
+                      Due Date: {new Date(activeLoan.DueDate).toLocaleDateString()} ({isOverdue ? `${Math.abs(days)} days overdue` : `${days} days left`})
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <button
+              className="btn-gradient"
+              style={{ width: '100%', padding: '0.75rem' }}
+              onClick={() => {
+                setShowBookModal(false);
+                setSelectedBook(null);
+              }}
+            >
+              Close Details
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
