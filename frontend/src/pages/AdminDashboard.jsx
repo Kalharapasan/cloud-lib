@@ -341,7 +341,13 @@ const AdminDashboard = () => {
             🔄 Transaction Management
           </button>
           <button
-            className={`tab-btn ${activeTab === 'rese          {activeTab === 'inventory' && (() => {
+            className={`tab-btn ${activeTab === 'reservations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reservations')}
+            id="tab-reservations"
+          >
+            📚 Reservations
+          </button>
+          {activeTab === 'inventory' && (
             const categories = [...new Set(books.map(b => b.Category).filter(Boolean))];
             const publishers = [...new Set(books.map(b => b.Publisher).filter(Boolean))];
             const filteredBooks = books.filter((book) => {
@@ -809,6 +815,13 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+{/* Reservations Tab */}
+{activeTab === 'reservations' && (
+  <div className="animate-fade-in">
+    <h2 className="text-xl font-bold mb-4">Reservations</h2>
+    <p className="text-muted">Reservation functionality coming soon.</p>
+  </div>
+)}
         </div>
       </div>
 
