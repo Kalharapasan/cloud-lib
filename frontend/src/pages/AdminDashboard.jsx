@@ -930,17 +930,267 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
-{/* Reservations Tab */}
-{activeTab === 'reservations' && (
-  <div className="animate-fade-in">
-    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
-      Reservations
-    </h3>
-    <div className="glass-card-light" style={{ padding: '1.25rem' }}>
-      <p style={{ color: 'var(--text-sub)' }}>Reservation functionality coming soon.</p>
-    </div>
-  </div>
-)}
+        {/* Reservations Tab */}
+        {activeTab === 'reservations' && (
+          <div className="animate-fade-in">
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1rem',
+              flexWrap: 'wrap',
+              marginBottom: '1rem',
+            }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                  Reservations
+                </h3>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>
+                  Approve, cancel, and monitor student reservation requests.
+                </p>
+              </div>
+              <button className="btn-gradient" onClick={handleReservationReport} id="btn-reservation-report">
+                Download Report
+              </button>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(13rem, 1fr))',
+              gap: '1rem',
+              marginBottom: '1rem',
+            }}>
+              <StatsCard icon="🔔" label="Pending" value={reservationStatusCounts.Pending || 0} color="#f59e0b" />
+              <StatsCard icon="✅" label="Fulfilled" value={reservationStatusCounts.Fulfilled || 0} color="#22c55e" />
+              <StatsCard icon="❌" label="Cancelled" value={reservationStatusCounts.Cancelled || 0} color="#ef4444" />
+              <StatsCard icon="⏰" label="Expired" value={reservationStatusCounts.Expired || 0} color="#a78bfa" />
+            </div>
+
+            <div className="glass-card-light" style={{ padding: '1rem', marginBottom: '1rem' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))',
+                gap: '1rem',
+                alignItems: 'end',
+              }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Status</label>
+                  <select
+                    className="select-glass"
+                    value={reservationFilters.status}
+                    onChange={(e) => setReservationFilters({ ...reservationFilters, status: e.target.value })}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Fulfilled">Fulfilled</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Expired">Expired</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Student</label>
+                  <input
+                    type="text"
+                    className="input-glass"
+                    placeholder="Name or student ID"
+                    value={reservationFilters.student}
+                    onChange={(e) => setReservationFilters({ ...reservationFilters, student: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Book</label>
+                  <input
+                    type="text"
+                    className="input-glass"
+                    placeholder="Title or ISBN"
+                    value={reservationFilters.book}
+                    onChange={(e) => setReservationFilters({ ...reservationFilters, book: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>From</label>
+                  <input
+                    type="date"
+                    className="input-glass"
+                    value={reservationFilters.from}
+                    onChange={(e) => setReservationFilters({ ...reservationFilters, from: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>To</label>
+                  <input
+                    type="date"
+                    className="input-glass"
+                    value={reservationFilters.to}
+                    onChange={(e) => setReservationFilters({ ...reservationFilters, to: e.target.value })}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn-gradient" type="button" onClick={refreshReservations} id="btn-refresh-reservations">
+                    Apply Filters
+                  </button>
+                  <button
+                    type="button"
+                    className="tab-btn"
+                    onClick={() => {
+                      setReservationFilters({ status: '', student: '', book: '', from: '', to: '' });
+                      setSelectedReservationIds([]);
+                      fetchAll();
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-card-light" style={{ padding: '1rem' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '1rem',
+                flexWrap: 'wrap',
+                marginBottom: '1rem',
+              }}>
+                <div style={{ color: 'var(--text-sub)', fontSize: '0.85rem' }}>
+                  Showing {filteredReservations.length} reservation{filteredReservations.length !== 1 ? 's' : ''}
+                  {selectedReservationIds.length > 0 ? `, ${selectedReservationIds.length} selected` : ''}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="tab-btn"
+                    onClick={selectVisibleReservations}
+                  >
+                    Select Pending
+                  </button>
+                  <button
+                    type="button"
+                    className="tab-btn"
+                    onClick={clearReservationSelection}
+                    disabled={selectedReservationIds.length === 0}
+                  >
+                    Clear Selection
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-gradient"
+                    onClick={() => openReservationAction(selectedReservationIds, 'Fulfilled')}
+                    disabled={selectedReservationIds.length === 0}
+                  >
+                    Fulfill Selected
+                  </button>
+                  <button
+                    type="button"
+                    className="tab-btn"
+                    onClick={() => openReservationAction(selectedReservationIds, 'Cancelled')}
+                    disabled={selectedReservationIds.length === 0}
+                  >
+                    Cancel Selected
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table-glass">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '3rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={filteredReservations.filter((reservation) => reservation.Status === 'Pending').length > 0 && filteredReservations.filter((reservation) => reservation.Status === 'Pending').every((reservation) => selectedReservationIds.includes(reservation.ReservationID))}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              selectVisibleReservations();
+                            } else {
+                              clearReservationSelection();
+                            }
+                          }}
+                        />
+                      </th>
+                      <th>Student</th>
+                      <th>Book</th>
+                      <th>Requested</th>
+                      <th>Priority</th>
+                      <th>Status</th>
+                      <th>Note</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredReservations.map((reservation) => {
+                      const isPending = reservation.Status === 'Pending';
+                      return (
+                        <tr key={reservation.ReservationID}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedReservationIds.includes(reservation.ReservationID)}
+                              disabled={!isPending}
+                              onChange={() => toggleReservationSelection(reservation.ReservationID)}
+                            />
+                          </td>
+                          <td>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{reservation.UserName}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                {reservation.StudentID || '—'} · {reservation.UserEmail}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{reservation.Title}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{reservation.ISBN}</div>
+                            </div>
+                          </td>
+                          <td style={{ color: 'var(--text-sub)' }}>{new Date(reservation.RequestDate).toLocaleString()}</td>
+                          <td>
+                            <span className={`badge ${reservation.Priority === 'High' ? 'badge-overdue' : 'badge-pending'}`}>
+                              {reservation.Priority}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${reservation.Status === 'Fulfilled' ? 'badge-returned' : reservation.Status === 'Pending' ? 'badge-pending' : 'badge-out'}`}>
+                              {reservation.Status}
+                            </span>
+                          </td>
+                          <td style={{ maxWidth: '18rem' }}>
+                            <span style={{ color: 'var(--text-sub)', fontSize: '0.8rem' }}>
+                              {reservation.AdminNote || '—'}
+                            </span>
+                          </td>
+                          <td>
+                            {isPending ? (
+                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <button className="btn-gradient" type="button" onClick={() => openReservationAction([reservation.ReservationID], 'Fulfilled')}>
+                                  Fulfill
+                                </button>
+                                <button className="tab-btn" type="button" onClick={() => openReservationAction([reservation.ReservationID], 'Cancelled')}>
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Processed</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {filteredReservations.length === 0 && (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                          No reservations found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
 
