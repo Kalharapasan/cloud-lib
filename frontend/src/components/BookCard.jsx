@@ -52,7 +52,7 @@ const BookCard = ({ book, onClick }) => {
         <h3 style={{
           fontSize: '1rem',
           fontWeight: 700,
-          color: '#e2e8f0',
+          color: 'var(--text-main)',
           marginBottom: '0.25rem',
           lineHeight: 1.3,
           overflow: 'hidden',
@@ -61,7 +61,7 @@ const BookCard = ({ book, onClick }) => {
         }}>{book.Title}</h3>
         <p style={{
           fontSize: '0.8rem',
-          color: '#94a3b8',
+          color: 'var(--text-sub)',
           marginBottom: '0.75rem',
         }}>by {book.Author}</p>
         <div style={{
@@ -71,7 +71,7 @@ const BookCard = ({ book, onClick }) => {
         }}>
           <span style={{
             fontSize: '0.7rem',
-            color: '#64748b',
+            color: 'var(--text-muted)',
             fontFamily: 'monospace',
           }}>{book.ISBN}</span>
           <span style={{

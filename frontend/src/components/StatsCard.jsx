@@ -32,7 +32,7 @@ const StatsCard = ({ icon, label, value, color = '#6366f1' }) => {
       <div>
         <p style={{
           fontSize: '0.75rem',
-          color: '#94a3b8',
+          color: 'var(--text-sub)',
           textTransform: 'uppercase',
           letterSpacing: '0.05em',
           fontWeight: 600,
@@ -41,7 +41,7 @@ const StatsCard = ({ icon, label, value, color = '#6366f1' }) => {
         <p style={{
           fontSize: '1.75rem',
           fontWeight: 800,
-          color: '#e2e8f0',
+          color: 'var(--text-main)',
           lineHeight: 1,
         }}>{value}</p>
       </div>

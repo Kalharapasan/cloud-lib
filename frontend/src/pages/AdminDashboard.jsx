@@ -1589,6 +1589,97 @@ const AdminDashboard = () => {
           </div>
         ) : null}
       </Modal>
+
+      {/* ── Reservation Action Confirmation Modal ───────────── */}
+      <Modal
+        isOpen={reservationAction.open}
+        onClose={closeReservationAction}
+        title={`${reservationAction.status === 'Fulfilled' ? '✅ Fulfill' : '❌ Cancel'} Reservation${reservationAction.ids.length > 1 ? 's' : ''}`}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', minWidth: '24rem' }}>
+          <div style={{
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            background: reservationAction.status === 'Fulfilled' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+            border: `1px solid ${reservationAction.status === 'Fulfilled' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          }}>
+            <p style={{
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              color: reservationAction.status === 'Fulfilled' ? '#4ade80' : '#f87171',
+              marginBottom: '0.25rem',
+            }}>
+              {reservationAction.status === 'Fulfilled'
+                ? `Fulfill ${reservationAction.ids.length} reservation${reservationAction.ids.length > 1 ? 's' : ''}?`
+                : `Cancel ${reservationAction.ids.length} reservation${reservationAction.ids.length > 1 ? 's' : ''}?`
+              }
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>
+              {reservationAction.status === 'Fulfilled'
+                ? 'This will issue the book(s) to the student(s) with a 14-day loan period and decrement stock.'
+                : 'This will cancel the reservation(s) and notify the student(s) via email.'
+              }
+            </p>
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '0.8rem',
+              color: 'var(--text-sub)',
+              marginBottom: '0.375rem',
+              fontWeight: 600,
+            }}>
+              Admin Note (optional)
+            </label>
+            <textarea
+              className="input-glass"
+              style={{ resize: 'vertical', minHeight: '4rem' }}
+              value={reservationAction.note}
+              onChange={(e) => setReservationAction({ ...reservationAction, note: e.target.value })}
+              placeholder="Add a note for the student (e.g., pickup location, reason for cancellation)..."
+              id="reservation-action-note"
+            />
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid rgba(99, 102, 241, 0.1)',
+          }}>
+            <select
+              className="select-glass"
+              style={{ width: 'auto', minWidth: '10rem' }}
+              value={reservationAction.status}
+              onChange={(e) => setReservationAction({ ...reservationAction, status: e.target.value })}
+              id="reservation-action-status"
+            >
+              <option value="Fulfilled">✅ Fulfill</option>
+              <option value="Cancelled">❌ Cancel</option>
+            </select>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                type="button"
+                className="tab-btn"
+                onClick={closeReservationAction}
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                className="btn-gradient"
+                onClick={submitReservationAction}
+                id="btn-confirm-reservation-action"
+              >
+                Confirm {reservationAction.status === 'Fulfilled' ? 'Fulfill' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
