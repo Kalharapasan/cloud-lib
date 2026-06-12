@@ -7,7 +7,9 @@ const {
   createReservation,
   getMyReservations,
   getAllReservations,
-  updateReservationStatus
+  updateReservationStatus,
+  bulkUpdateStatus,
+  getReservationReport
 } = require('../controllers/reservationController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 

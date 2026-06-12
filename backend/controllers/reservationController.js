@@ -2,7 +2,16 @@
 // Cloud Lib — Reservation Controller (Advanced Feature)
 // ============================================================
 const pool = require('../config/db');
-
+const transporter = nodemailer.createTransport({
+  host: 'smtp.ethereal.email',
+  port: 587,
+  auth: {
+    user: process.env.ETHEREAL_USER,
+    pass: process.env.ETHEREAL_PASS
+  }
+});
+const nodemailer = require('nodemailer');
+const RESERVATION_TTL_DAYS = 7; // days before auto‑expire
 /**
  * POST /api/reservations
  * Create a new book reservation (Student only)
@@ -176,9 +185,146 @@ const updateReservationStatus = async (req, res) => {
   }
 };
 
+/**
+ * Bulk update reservation status (Admin only).
+ * Body: { ids: [reservationId], status: 'Fulfilled' | 'Cancelled' }
+ */
+const bulkUpdateStatus = async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const { ids, status } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array required.' });
+    }
+    if (!['Fulfilled', 'Cancelled'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status.' });
+    }
+    await connection.beginTransaction();
+    const [rows] = await connection.query(
+      'SELECT ReservationID, UserID, BookID FROM Reservations WHERE ReservationID IN (?) AND Status = ?',
+      [ids, 'Pending']
+    );
+    if (rows.length !== ids.length) {
+      await connection.rollback();
+      return res.status(400).json({ error: 'One or more reservations are not pending or do not exist.' });
+    }
+    for (const r of rows) {
+      if (status === 'Fulfilled') {
+        const [books] = await connection.query('SELECT Quantity FROM Books WHERE BookID = ? FOR UPDATE', [r.BookID]);
+        if (books.length === 0 || books[0].Quantity <= 0) {
+          await connection.rollback();
+          return res.status(400).json({ error: `Book ${r.BookID} out of stock.` });
+        }
+        const [active] = await connection.query(
+          'SELECT RecordID FROM Borrow_Records WHERE UserID = ? AND BookID = ? AND ReturnStatus = ?',
+          [r.UserID, r.BookID, 'Pending']
+        );
+        if (active.length > 0) {
+          await connection.rollback();
+          return res.status(400).json({ error: `User ${r.UserID} already has active loan for book ${r.BookID}.` });
+        }
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14);
+        await connection.query(
+          'INSERT INTO Borrow_Records (UserID, BookID, DueDate, ReturnStatus) VALUES (?, ?, ?, ?)',
+          [r.UserID, r.BookID, dueDate, 'Pending']
+        );
+        const newQty = books[0].Quantity - 1;
+        const newStatus = newQty > 0 ? 'Available' : 'Out of Stock';
+        await connection.query('UPDATE Books SET Quantity = ?, Status = ? WHERE BookID = ?', [newQty, newStatus, r.BookID]);
+        await sendEmail(`${r.UserID}@example.com`, 'Reservation fulfilled', `<p>Your reservation for book ${r.BookID} has been fulfilled.</p>`);
+      } else if (status === 'Cancelled') {
+        await sendEmail(`${r.UserID}@example.com`, 'Reservation cancelled', `<p>Your reservation for book ${r.BookID} was cancelled.</p>`);
+      }
+      await connection.query('UPDATE Reservations SET Status = ? WHERE ReservationID = ?', [status, r.ReservationID]);
+    }
+    await connection.commit();
+    res.json({ message: `Bulk update to ${status} completed for ${ids.length} reservations.` });
+  } catch (err) {
+    await connection.rollback();
+    console.error('BulkUpdateStatus error:', err.message);
+    res.status(500).json({ error: 'Bulk update failed.' });
+  } finally {
+    connection.release();
+  }
+};
+
+/**
+ * Get reservation report (Admin only).
+ * Optional query param `format=csv` for CSV download.
+ */
+const getReservationReport = async (req, res) => {
+  try {
+    const [stats] = await pool.query(`
+      SELECT 
+        COUNT(*) AS total,
+        SUM(Status = 'Pending') AS pending,
+        SUM(Status = 'Fulfilled') AS fulfilled,
+        SUM(Status = 'Cancelled') AS cancelled,
+        SUM(Status = 'Expired') AS expired
+      FROM Reservations`);
+    const report = stats[0];
+    if (req.query.format === 'csv') {
+      const csv = `total,pending,fulfilled,cancelled,expired\n${report.total},${report.pending},${report.fulfilled},${report.cancelled},${report.expired}`;
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="reservation_report.csv"');
+      return res.send(csv);
+    }
+    res.json({ report });
+  } catch (err) {
+    console.error('ReservationReport error:', err.message);
+    res.status(500).json({ error: 'Failed to generate report.' });
+  }
+};
+
+/**
+ * Auto‑expire pending reservations older than configured TTL.
+ * Intended to be called by a scheduled job.
+ */
+const autoExpireReservations = async () => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - RESERVATION_TTL_DAYS);
+    const [toExpire] = await connection.query(
+      'SELECT ReservationID, UserID, BookID FROM Reservations WHERE Status = ? AND RequestDate < ?',
+      ['Pending', cutoff]
+    );
+    if (toExpire.length === 0) {
+      await connection.commit();
+      return;
+    }
+    const ids = toExpire.map(r => r.ReservationID);
+    await connection.query('UPDATE Reservations SET Status = ? WHERE ReservationID IN (?)', ['Expired', ids]);
+    for (const r of toExpire) {
+      await sendEmail(`${r.UserID}@example.com`, 'Reservation expired', `<p>Your reservation for book ${r.BookID} has expired.</p>`);
+    }
+    await connection.commit();
+    console.log(`Auto‑expired ${ids.length} reservations.`);
+  } catch (err) {
+    await connection.rollback();
+    console.error('AutoExpireReservations error:', err.message);
+  } finally {
+    connection.release();
+  }
+};
+
+/** Helper to send email using transporter */
+const sendEmail = async (to, subject, html) => {
+  try {
+    await transporter.sendMail({ from: process.env.SMTP_FROM || 'no-reply@example.com', to, subject, html });
+  } catch (e) {
+    console.error('Email send error:', e);
+  }
+};
+
 module.exports = {
   createReservation,
   getMyReservations,
   getAllReservations,
-  updateReservationStatus
+  updateReservationStatus,
+  bulkUpdateStatus,
+  getReservationReport,
+  autoExpireReservations
 };
