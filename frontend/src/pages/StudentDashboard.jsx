@@ -366,7 +366,7 @@ const StudentDashboard = () => {
                           <button
                             onClick={async () => {
                               try {
-                                await API.put(`/reservations/${res.ReservationID}/status`, { status: 'Cancelled' });
+                                await API.delete(`/reservations/${res.ReservationID}/cancel`);
                                 showMessage('Reservation cancelled successfully.');
                                 fetchReservations();
                               } catch (err) {
