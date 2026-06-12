@@ -25,12 +25,26 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Health Check ────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    service: 'Cloud Lib API',
-    timestamp: new Date().toISOString()
+// ── Health Check (used by Elastic Beanstalk ALB) ─────────────
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'unknown';
+  try {
+    const pool = require('./config/db');
+    await pool.query('SELECT 1');
+    dbStatus = 'connected';
+  } catch {
+    dbStatus = 'disconnected';
+  }
+
+  const isHealthy = dbStatus === 'connected';
+  res.status(isHealthy ? 200 : 503).json({
+    status:      isHealthy ? 'OK' : 'DEGRADED',
+    service:     'Cloud Lib API',
+    version:     process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    database:    dbStatus,
+    region:      process.env.AWS_REGION || 'local',
+    timestamp:   new Date().toISOString(),
   });
 });
 
