@@ -1,0 +1,36 @@
+# ============================================================
+# Cloud Lib — Backend .dockerignore
+# Prevents unnecessary files from being sent to Docker daemon
+# ============================================================
+
+# Dependencies (re-installed inside image)
+node_modules/
+
+# Environment files (injected at runtime via EB env vars)
+.env
+.env.*
+
+# Git history
+.git/
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor configs
+.vscode/
+.idea/
+
+# Test files (not needed in production image)
+*.test.js
+*.spec.js
+__tests__/
+coverage/
+
+# CI/CD artifacts
+.github/
