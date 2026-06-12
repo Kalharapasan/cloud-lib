@@ -314,11 +314,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: '0.25rem',
-          marginBottom: '-1px',
-        }}>
+        <div className="tab-bar">
           <button
             className={`tab-btn ${activeTab === 'inventory' ? 'active' : ''}`}
             onClick={() => setActiveTab('inventory')}
@@ -347,6 +343,9 @@ const AdminDashboard = () => {
           >
             📚 Reservations
           </button>
+        </div>
+
+        <div className="tab-panel">
           {activeTab === 'inventory' && (() => {
             const categories = [...new Set(books.map((book) => book.Category).filter(Boolean))];
             const publishers = [...new Set(books.map((book) => book.Publisher).filter(Boolean))];
@@ -806,8 +805,12 @@ const AdminDashboard = () => {
 {/* Reservations Tab */}
 {activeTab === 'reservations' && (
   <div className="animate-fade-in">
-    <h2 className="text-xl font-bold mb-4">Reservations</h2>
-    <p className="text-muted">Reservation functionality coming soon.</p>
+    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+      Reservations
+    </h3>
+    <div className="glass-card-light" style={{ padding: '1.25rem' }}>
+      <p style={{ color: 'var(--text-sub)' }}>Reservation functionality coming soon.</p>
+    </div>
   </div>
 )}
         </div>
