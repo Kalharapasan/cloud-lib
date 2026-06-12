@@ -117,7 +117,7 @@ ON DUPLICATE KEY UPDATE Name=Name;
 
 -- Seed Student (password: student123)
 INSERT INTO Users (Name, Email, Role, PasswordHash, StudentID, Phone, Department) VALUES
-('Library Student', 'student@cloudlib.com', 'Student', '$2a$10$vK6hTebfC6/XqUsk2t/6P.lWskqJdE1y8sQG6dE0x7wO0a6e0y1a', 'STU-2026-001', '+1-555-0199', 'Computer Science')
+('Library Student', 'student@cloudlib.com', 'Student', '$2a$10$e7945weGME.ErqZFQIuxquf57Rj5Om3T349gpAc7d1BmnumvKcO3.', 'STU-2026-001', '+1-555-0199', 'Computer Science')
 ON DUPLICATE KEY UPDATE Name=Name;
 
 -- Sample books
