@@ -67,7 +67,6 @@ const StudentDashboard = () => {
     if (record.ReturnStatus === 'Returned') return 'returned';
     const due = new Date(record.DueDate);
     const today = new Date();
-    // Set hours to 0 to compare dates accurately
     due.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     if (due < today) return 'overdue';
@@ -97,14 +96,14 @@ const StudentDashboard = () => {
           <h2 style={{
             fontSize: '1.75rem',
             fontWeight: 800,
-            background: 'linear-gradient(135deg, #e2e8f0, #a5b4fc)',
+            background: 'var(--text-title-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             marginBottom: '0.25rem',
           }}>
             Welcome back, {user?.Name?.split(' ')[0]} 👋
           </h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             Browse the digital catalog and manage your borrowing records.
           </p>
         </div>
@@ -135,7 +134,7 @@ const StudentDashboard = () => {
             <h3 style={{
               fontSize: '1.25rem',
               fontWeight: 700,
-              color: '#e2e8f0',
+              color: 'var(--text-main)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -158,17 +157,17 @@ const StudentDashboard = () => {
                 top: '50%',
                 transform: 'translateY(-50%)',
                 fontSize: '0.9rem',
-                color: '#64748b',
+                color: 'var(--text-muted)',
               }}>🔍</span>
             </div>
           </div>
 
           {loadingBooks ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               Loading catalog...
             </div>
           ) : books.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</p>
               <p>No books found matching your search.</p>
             </div>
@@ -197,7 +196,7 @@ const StudentDashboard = () => {
           <h3 style={{
             fontSize: '1.25rem',
             fontWeight: 700,
-            color: '#e2e8f0',
+            color: 'var(--text-main)',
             marginBottom: '1.25rem',
             display: 'flex',
             alignItems: 'center',
@@ -207,13 +206,13 @@ const StudentDashboard = () => {
           </h3>
 
           {loadingHistory ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               Loading history...
             </div>
           ) : history.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</p>
-              <p>You haven\'t borrowed any books yet.</p>
+              <p>You haven't borrowed any books yet.</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -234,8 +233,8 @@ const StudentDashboard = () => {
                     const days = getDaysRemaining(record.DueDate);
                     return (
                       <tr key={record.RecordID}>
-                        <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{record.Title}</td>
-                        <td style={{ color: '#94a3b8' }}>{record.Author}</td>
+                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{record.Title}</td>
+                        <td style={{ color: 'var(--text-sub)' }}>{record.Author}</td>
                         <td>{new Date(record.IssueDate).toLocaleDateString()}</td>
                         <td>{new Date(record.DueDate).toLocaleDateString()}</td>
                         <td>
@@ -247,7 +246,7 @@ const StudentDashboard = () => {
                         </td>
                         <td>
                           {status === 'returned' ? (
-                            <span style={{ color: '#64748b' }}>—</span>
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
                           ) : status === 'overdue' ? (
                             <span style={{ color: '#f87171', fontWeight: 600 }}>{Math.abs(days)}d overdue</span>
                           ) : (
@@ -289,11 +288,11 @@ const StudentDashboard = () => {
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#e2e8f0' }}>{selectedBook.Title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>by {selectedBook.Author}</p>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedBook.Title}</h3>
+              <p style={{ color: 'var(--text-sub)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>by {selectedBook.Author}</p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                 {selectedBook.Category && (
-                  <span className="badge" style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)' }}>
+                  <span className="badge" style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--table-th-text)', border: '1px solid rgba(99,102,241,0.3)' }}>
                     {selectedBook.Category}
                   </span>
                 )}
@@ -306,7 +305,7 @@ const StudentDashboard = () => {
             {selectedBook.Description && (
               <div>
                 <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#a5b4fc', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Description</h4>
-                <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: 1.5 }}>{selectedBook.Description}</p>
+                <p style={{ color: 'var(--text-sub)', fontSize: '0.875rem', lineHeight: 1.5 }}>{selectedBook.Description}</p>
               </div>
             )}
 
@@ -314,29 +313,29 @@ const StudentDashboard = () => {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
-              background: 'rgba(15,23,42,0.4)',
+              background: 'var(--input-bg)',
               padding: '1rem',
               borderRadius: '0.5rem',
-              border: '1px solid rgba(99,102,241,0.1)',
+              border: '1px solid var(--input-border)',
             }}>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>ISBN</span>
-                <span style={{ fontSize: '0.85rem', color: '#e2e8f0', fontFamily: 'monospace' }}>{selectedBook.ISBN}</span>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>ISBN</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontFamily: 'monospace' }}>{selectedBook.ISBN}</span>
               </div>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Available Copies</span>
-                <span style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 700 }}>{selectedBook.Quantity}</span>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Available Copies</span>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 700 }}>{selectedBook.Quantity}</span>
               </div>
               {selectedBook.Publisher && (
                 <div>
-                  <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Publisher</span>
-                  <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{selectedBook.Publisher}</span>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Publisher</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>{selectedBook.Publisher}</span>
                 </div>
               )}
               {selectedBook.PublishYear && (
                 <div>
-                  <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Publication Year</span>
-                  <span style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{selectedBook.PublishYear}</span>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Publication Year</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>{selectedBook.PublishYear}</span>
                 </div>
               )}
             </div>
