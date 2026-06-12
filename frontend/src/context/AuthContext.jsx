@@ -13,9 +13,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState('dark');
 
-  // Restore session on mount
+  // Restore session and theme on mount
   useEffect(() => {
+    // 1. Session restore
     const savedToken = localStorage.getItem('cloudlib_token');
     const savedUser = localStorage.getItem('cloudlib_user');
     if (savedToken && savedUser) {
@@ -23,7 +25,19 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
+
+    // 2. Theme restore
+    const savedTheme = localStorage.getItem('cloudlib_theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('cloudlib_theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
 
   const login = async (email, password) => {
     const res = await API.post('/auth/login', { email, password });
@@ -56,12 +70,14 @@ export const AuthProvider = ({ children }) => {
     user,
     token,
     loading,
+    theme,
     isAuthenticated: !!token,
     isAdmin: user?.Role === 'Admin',
     isStudent: user?.Role === 'Student',
     login,
     register,
     logout,
+    toggleTheme
   };
 
   return (

@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, register, theme, toggleTheme } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -63,13 +63,39 @@ const LoginPage = () => {
       position: 'relative',
       overflow: 'hidden',
     }}>
+      {/* Floating Theme Toggle (Top Right) */}
+      <button
+        onClick={toggleTheme}
+        style={{
+          position: 'absolute',
+          top: '1.5rem',
+          right: '1.5rem',
+          background: 'var(--card-bg-light)',
+          border: '1px solid var(--card-border-light)',
+          color: 'var(--text-main)',
+          width: '2.5rem',
+          height: '2.5rem',
+          borderRadius: '0.625rem',
+          cursor: 'pointer',
+          fontSize: '1.1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.3s ease',
+          zIndex: 10,
+        }}
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
+
       {/* Background Decoration */}
       <div style={{
         position: 'absolute',
         width: '30rem',
         height: '30rem',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
         top: '-10rem',
         right: '-10rem',
         pointerEvents: 'none',
@@ -79,7 +105,7 @@ const LoginPage = () => {
         width: '25rem',
         height: '25rem',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)',
         bottom: '-8rem',
         left: '-8rem',
         pointerEvents: 'none',
@@ -110,14 +136,14 @@ const LoginPage = () => {
           <h1 style={{
             fontSize: '1.75rem',
             fontWeight: 800,
-            background: 'linear-gradient(135deg, #a5b4fc, #c4b5fd, #e9d5ff)',
+            background: 'var(--text-title-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             marginBottom: '0.25rem',
           }}>Cloud Lib</h1>
           <p style={{
             fontSize: '0.85rem',
-            color: '#64748b',
+            color: 'var(--text-muted)',
           }}>Library Management System</p>
         </div>
 
@@ -126,7 +152,8 @@ const LoginPage = () => {
           display: 'flex',
           marginBottom: '1.5rem',
           borderRadius: '0.625rem',
-          background: 'rgba(15,23,42,0.5)',
+          background: 'var(--input-bg)',
+          border: '1px solid var(--input-border)',
           padding: '0.25rem',
         }}>
           <button
@@ -142,7 +169,7 @@ const LoginPage = () => {
               fontWeight: 600,
               transition: 'all 0.3s ease',
               background: isLogin ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
-              color: isLogin ? 'white' : '#64748b',
+              color: isLogin ? 'white' : 'var(--text-muted)',
               boxShadow: isLogin ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
             }}
           >Sign In</button>
@@ -159,7 +186,7 @@ const LoginPage = () => {
               fontWeight: 600,
               transition: 'all 0.3s ease',
               background: !isLogin ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
-              color: !isLogin ? 'white' : '#64748b',
+              color: !isLogin ? 'white' : 'var(--text-muted)',
               boxShadow: !isLogin ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
             }}
           >Register</button>
@@ -184,7 +211,7 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                 Full Name
               </label>
               <input
@@ -199,7 +226,7 @@ const LoginPage = () => {
           )}
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
               Email Address
             </label>
             <input
@@ -214,7 +241,7 @@ const LoginPage = () => {
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
               Password
             </label>
             <input
@@ -232,7 +259,7 @@ const LoginPage = () => {
           {!isLogin && (
             <>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                   Role
                 </label>
                 <select
@@ -249,7 +276,7 @@ const LoginPage = () => {
               {role === 'Student' && (
                 <>
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Student ID
                     </label>
                     <input
@@ -263,7 +290,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Phone Number
                     </label>
                     <input
@@ -276,7 +303,7 @@ const LoginPage = () => {
                     />
                   </div>
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Department
                     </label>
                     <input
@@ -314,7 +341,7 @@ const LoginPage = () => {
           textAlign: 'center',
           marginTop: '1.5rem',
           fontSize: '0.75rem',
-          color: '#475569',
+          color: 'var(--text-muted)',
         }}>
           Powered by AWS Cloud Infrastructure
         </p>

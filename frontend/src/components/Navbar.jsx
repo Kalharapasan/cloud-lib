@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, theme, toggleTheme } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -43,12 +43,12 @@ const Navbar = () => {
           <h1 style={{
             fontSize: '1.125rem',
             fontWeight: 700,
-            background: 'linear-gradient(135deg, #a5b4fc, #c4b5fd)',
+            background: 'var(--text-title-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             lineHeight: 1.2,
           }}>Cloud Lib</h1>
-          <p style={{ fontSize: '0.65rem', color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Library Management System
           </p>
         </div>
@@ -57,7 +57,7 @@ const Navbar = () => {
       {/* User Info */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#e2e8f0' }}>{user?.Name}</p>
+          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)' }}>{user?.Name}</p>
           <span className={isAdmin ? 'badge badge-admin' : 'badge badge-student'} style={{ fontSize: '0.65rem' }}>
             {user?.Role}
           </span>
@@ -76,6 +76,30 @@ const Navbar = () => {
         }}>
           {user?.Name?.charAt(0)?.toUpperCase()}
         </div>
+
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            background: 'rgba(99, 102, 241, 0.12)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            color: 'var(--text-main)',
+            width: '2.25rem',
+            height: '2.25rem',
+            borderRadius: '0.5rem',
+            cursor: 'pointer',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+          }}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          id="theme-toggle-btn"
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+
         <button
           onClick={handleLogout}
           style={{
