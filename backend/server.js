@@ -4,6 +4,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const cron = require('node-cron');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -11,6 +12,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const borrowRoutes = require('./routes/borrowRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
 const { startOverdueChecker } = require('./services/snsNotifier');
+const { autoExpireReservations } = require('./controllers/reservationController');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -73,6 +75,21 @@ app.listen(PORT, () => {
 
   // Start the SNS overdue notification cron job
   startOverdueChecker();
+
+  // ── Daily Auto-Expire Cron Job ────────────────────────────
+  // Runs every day at midnight to expire old pending reservations
+  cron.schedule('0 0 * * *', async () => {
+    console.log('\n⏰ [Cron] Running daily reservation auto-expire job...');
+    const result = await autoExpireReservations();
+    console.log(`⏰ [Cron] Auto-expire result:`, result);
+  });
+  console.log('⏰ Reservation Auto-Expire scheduled — runs daily at midnight');
+
+  // Run once on startup (10s delay to let DB pool settle)
+  setTimeout(async () => {
+    console.log('\n⏰ [Cron] Initial reservation expiry check on startup...');
+    await autoExpireReservations();
+  }, 10000);
 });
 
 module.exports = app;
