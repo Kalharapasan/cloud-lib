@@ -15,6 +15,9 @@ USE cloud_lib;
 -- ALTER TABLE Books ADD COLUMN Publisher VARCHAR(150) DEFAULT NULL;
 -- ALTER TABLE Books ADD COLUMN PublishYear INT DEFAULT NULL;
 -- ALTER TABLE Books ADD COLUMN CoverImage VARCHAR(255) DEFAULT NULL;
+-- ALTER TABLE Reservations MODIFY COLUMN Status ENUM('Pending','Fulfilled','Cancelled','Expired') NOT NULL DEFAULT 'Pending';
+-- ALTER TABLE Reservations ADD COLUMN Priority ENUM('Normal','High') NOT NULL DEFAULT 'Normal';
+-- ALTER TABLE Reservations ADD COLUMN AdminNote TEXT DEFAULT NULL;
 
 -- ============================================================
 -- 1. Users Table
@@ -81,22 +84,43 @@ CREATE TABLE IF NOT EXISTS Borrow_Records (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 4. Seed Data
+-- 4. Reservations Table (Advanced Feature)
+-- Now supports Expired status for auto-expiry and Priority levels
+-- ============================================================
+CREATE TABLE IF NOT EXISTS Reservations (
+    ReservationID INT           AUTO_INCREMENT PRIMARY KEY,
+    UserID        INT           NOT NULL,
+    BookID        INT           NOT NULL,
+    RequestDate   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    Status        ENUM('Pending', 'Fulfilled', 'Cancelled', 'Expired') NOT NULL DEFAULT 'Pending',
+    Priority      ENUM('Normal', 'High') NOT NULL DEFAULT 'Normal',
+    AdminNote     TEXT          DEFAULT NULL,
+
+    CONSTRAINT fk_res_user FOREIGN KEY (UserID)
+        REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_res_book FOREIGN KEY (BookID)
+        REFERENCES Books(BookID) ON DELETE CASCADE ON UPDATE CASCADE,
+
+    INDEX idx_res_status (Status),
+    INDEX idx_res_user   (UserID),
+    INDEX idx_res_date   (RequestDate)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 5. Seed Data
 -- ============================================================
 
 -- Library Admin (password: admin123)
--- Hash generated with bcrypt, 10 rounds
 INSERT INTO Users (Name, Email, Role, PasswordHash) VALUES
 ('Library Admin', 'admin@cloudlib.com', 'Admin', '$2a$10$mwrWHNB3THFHo5ZQv/iMduTsN4dqTYzPLvcwYuCCvXNFrPBCTp9F6')
 ON DUPLICATE KEY UPDATE Name=Name;
 
 -- Seed Student (password: student123)
--- Hash: $2a$10$vK6hTebfC6/XqUsk2t/6P.lWskqJdE1y8sQG6dE0x7wO0a6e0y1a
 INSERT INTO Users (Name, Email, Role, PasswordHash, StudentID, Phone, Department) VALUES
 ('Library Student', 'student@cloudlib.com', 'Student', '$2a$10$vK6hTebfC6/XqUsk2t/6P.lWskqJdE1y8sQG6dE0x7wO0a6e0y1a', 'STU-2026-001', '+1-555-0199', 'Computer Science')
 ON DUPLICATE KEY UPDATE Name=Name;
 
--- Sample books with descriptions, category, publisher, publish year
+-- Sample books
 INSERT INTO Books (Title, Author, ISBN, Quantity, Status, Description, Category, Publisher, PublishYear) VALUES
 ('Clean Code', 'Robert C. Martin', '978-0132350884', 5, 'Available', 'A handbook of agile software craftsmanship that helps developers write clean, maintainable, and elegant code.', 'Programming', 'Prentice Hall', 2008),
 ('The Pragmatic Programmer', 'David Thomas', '978-0135957059', 3, 'Available', 'One of the most significant books on software development, covering coding standards, tool use, and career development.', 'Software Engineering', 'Addison-Wesley', 1999),
@@ -106,23 +130,4 @@ INSERT INTO Books (Title, Author, ISBN, Quantity, Status, Description, Category,
 ('Computer Networking', 'James Kurose', '978-0133594140', 6, 'Available', 'A top-down approach to computer networking, explaining protocols and architecture from the application layer down.', 'Networking', 'Pearson', 2012),
 ('Artificial Intelligence', 'Stuart Russell', '978-0136042594', 2, 'Available', 'The standard textbook on artificial intelligence, describing search, logic, machine learning, and neural networks.', 'Artificial Intelligence', 'Pearson', 2009),
 ('Operating System Concepts', 'Abraham Silberschatz', '978-1118063330', 4, 'Available', 'A core textbook on operating system design, covering processes, memory management, file systems, and security.', 'Operating Systems', 'Wiley', 2012)
--- ============================================================
--- 5. Reservations Table (Advanced Feature)
--- ============================================================
-CREATE TABLE IF NOT EXISTS Reservations (
-    ReservationID INT           AUTO_INCREMENT PRIMARY KEY,
-    UserID        INT           NOT NULL,
-    BookID        INT           NOT NULL,
-    RequestDate   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    Status        ENUM('Pending', 'Fulfilled', 'Cancelled') NOT NULL DEFAULT 'Pending',
-    
-    CONSTRAINT fk_res_user FOREIGN KEY (UserID)
-        REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_res_book FOREIGN KEY (BookID)
-        REFERENCES Books(BookID) ON DELETE CASCADE ON UPDATE CASCADE,
-        
-    INDEX idx_res_status (Status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 ON DUPLICATE KEY UPDATE Title=Title;
-
