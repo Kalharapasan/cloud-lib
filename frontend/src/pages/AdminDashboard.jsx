@@ -243,7 +243,7 @@ const AdminDashboard = () => {
     return (
       <div style={{ minHeight: '100vh' }}>
         <Navbar />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#64748b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-muted)' }}>
           Loading dashboard...
         </div>
       </div>
@@ -260,14 +260,14 @@ const AdminDashboard = () => {
           <h2 style={{
             fontSize: '1.75rem',
             fontWeight: 800,
-            background: 'linear-gradient(135deg, #e2e8f0, #a5b4fc)',
+            background: 'var(--text-title-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             marginBottom: '0.25rem',
           }}>
             Admin Dashboard 🛡️
           </h2>
-          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             Manage inventory, process transactions, and monitor library operations.
           </p>
         </div>
@@ -343,7 +343,7 @@ const AdminDashboard = () => {
                 alignItems: 'center',
                 marginBottom: '1.25rem',
               }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
                   Book Inventory
                 </h3>
                 <button className="btn-gradient" onClick={openAddBook} id="btn-add-book">
@@ -368,11 +368,11 @@ const AdminDashboard = () => {
                   <tbody>
                     {books.map((book) => (
                       <tr key={book.BookID}>
-                        <td style={{ color: '#64748b' }}>#{book.BookID}</td>
-                        <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{book.Title}</td>
-                        <td style={{ color: '#94a3b8' }}>{book.Author}</td>
-                        <td style={{ color: '#a5b4fc' }}>{book.Category || '—'}</td>
-                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#64748b' }}>{book.ISBN}</td>
+                        <td style={{ color: 'var(--text-muted)' }}>#{book.BookID}</td>
+                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{book.Title}</td>
+                        <td style={{ color: 'var(--text-sub)' }}>{book.Author}</td>
+                        <td style={{ color: 'var(--table-th-text)' }}>{book.Category || '—'}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{book.ISBN}</td>
                         <td style={{ fontWeight: 700, color: book.Quantity > 0 ? '#a5b4fc' : '#f87171' }}>{book.Quantity}</td>
                         <td>
                           <span className={book.Status === 'Available' ? 'badge badge-available' : 'badge badge-out'}>
@@ -436,8 +436,8 @@ const AdminDashboard = () => {
                 alignItems: 'center',
                 marginBottom: '1.25rem',
               }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>
-                  Student Management
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  Student Roster
                 </h3>
                 <button className="btn-gradient" onClick={openAddStudent} id="btn-add-student">
                   + Add New Student
@@ -462,26 +462,26 @@ const AdminDashboard = () => {
                       <tr key={u.UserID}>
                         <td>
                           <div>
-                            <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{u.Name}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{u.Name}</span>
                             <br />
-                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{u.Email}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.Email}</span>
                           </div>
                         </td>
                         <td>
                           {u.StudentID ? (
                             <span style={{ fontFamily: 'monospace', color: '#a5b4fc', fontWeight: 600 }}>{u.StudentID}</span>
                           ) : (
-                            <span style={{ color: '#475569' }}>—</span>
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
                           )}
                         </td>
-                        <td>{u.Department || <span style={{ color: '#475569' }}>—</span>}</td>
-                        <td>{u.Phone || <span style={{ color: '#475569' }}>—</span>}</td>
+                        <td>{u.Department || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                        <td>{u.Phone || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                         <td>
                           <span className={u.Role === 'Admin' ? 'badge badge-admin' : 'badge badge-student'}>
                             {u.Role}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                           {new Date(u.CreatedAt).toLocaleDateString()}
                         </td>
                         <td>
@@ -546,7 +546,7 @@ const AdminDashboard = () => {
                     ))}
                     {users.length === 0 && (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                           No users registered in the system.
                         </td>
                       </tr>
@@ -562,7 +562,7 @@ const AdminDashboard = () => {
             <div className="animate-fade-in">
               {/* Issue Book Form */}
               <div className="glass-card-light" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   📤 Issue a Book
                 </h4>
                 <form onSubmit={handleIssueBook} style={{
@@ -572,7 +572,7 @@ const AdminDashboard = () => {
                   alignItems: 'end',
                 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Select Student
                     </label>
                     <select
@@ -591,7 +591,7 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Select Book
                     </label>
                     <select
@@ -610,7 +610,7 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
                       Due Days
                     </label>
                     <input
@@ -630,7 +630,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* All Transactions Table */}
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 📋 All Transactions
               </h4>
               <div style={{ overflowX: 'auto' }}>
@@ -653,15 +653,15 @@ const AdminDashboard = () => {
                         <tr key={rec.RecordID} style={{
                           background: isOverdue ? 'rgba(239,68,68,0.06)' : undefined,
                         }}>
-                          <td style={{ color: '#64748b' }}>#{rec.RecordID}</td>
+                          <td style={{ color: 'var(--text-muted)' }}>#{rec.RecordID}</td>
                           <td>
                             <div>
-                              <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.85rem' }}>{rec.UserName}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.85rem' }}>{rec.UserName}</span>
                               <br />
-                              <span style={{ fontSize: '0.7rem', color: '#64748b' }}>{rec.UserEmail}</span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{rec.UserEmail}</span>
                             </div>
                           </td>
-                          <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{rec.Title}</td>
+                          <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{rec.Title}</td>
                           <td>{new Date(rec.IssueDate).toLocaleDateString()}</td>
                           <td style={{ color: isOverdue ? '#f87171' : undefined, fontWeight: isOverdue ? 700 : undefined }}>
                             {new Date(rec.DueDate).toLocaleDateString()}
@@ -693,7 +693,7 @@ const AdminDashboard = () => {
                                 Mark Returned
                               </button>
                             ) : (
-                              <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                                 {rec.ReturnDate ? new Date(rec.ReturnDate).toLocaleDateString() : '—'}
                               </span>
                             )}
@@ -703,7 +703,7 @@ const AdminDashboard = () => {
                     })}
                     {records.length === 0 && (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                           No transactions found.
                         </td>
                       </tr>
@@ -725,7 +725,7 @@ const AdminDashboard = () => {
         <form onSubmit={handleBookSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '24rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Title</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Title</label>
               <input
                 type="text"
                 className="input-glass"
@@ -737,7 +737,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Author</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Author</label>
               <input
                 type="text"
                 className="input-glass"
@@ -749,7 +749,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>ISBN</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>ISBN</label>
               <input
                 type="text"
                 className="input-glass"
@@ -761,7 +761,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Quantity</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Quantity</label>
               <input
                 type="number"
                 className="input-glass"
@@ -773,7 +773,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Category</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Category</label>
               <input
                 type="text"
                 className="input-glass"
@@ -784,7 +784,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Publisher</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Publisher</label>
               <input
                 type="text"
                 className="input-glass"
@@ -795,7 +795,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Publish Year</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Publish Year</label>
               <input
                 type="number"
                 className="input-glass"
@@ -806,7 +806,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Description</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Description</label>
               <textarea
                 className="input-glass"
                 style={{ resize: 'vertical', minHeight: '5rem' }}
@@ -832,7 +832,7 @@ const AdminDashboard = () => {
         <form onSubmit={handleStudentSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '24rem' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Full Name</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Full Name</label>
               <input
                 type="text"
                 className="input-glass"
@@ -844,7 +844,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Email Address</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Email Address</label>
               <input
                 type="email"
                 className="input-glass"
@@ -856,8 +856,8 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
-                Password {editingStudent && <span style={{ color: '#64748b', fontSize: '0.7rem' }}>(Leave blank to keep current)</span>}
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>
+                Password {editingStudent && <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>(Leave blank to keep current)</span>}
               </label>
               <input
                 type="password"
@@ -871,7 +871,7 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Role</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Role</label>
               <select
                 className="select-glass"
                 value={studentForm.role}
@@ -887,7 +887,7 @@ const AdminDashboard = () => {
             {studentForm.role === 'Student' && (
               <>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Student ID</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Student ID</label>
                   <input
                     type="text"
                     className="input-glass"
@@ -899,7 +899,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Phone Number</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Phone Number</label>
                   <input
                     type="text"
                     className="input-glass"
@@ -910,7 +910,7 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Department</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Department</label>
                   <input
                     type="text"
                     className="input-glass"
@@ -941,7 +941,7 @@ const AdminDashboard = () => {
         title="Student Profile & Loans"
       >
         {loadingStudentDetail ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             Loading details...
           </div>
         ) : selectedStudent ? (
@@ -970,7 +970,7 @@ const AdminDashboard = () => {
                 {selectedStudent.Name?.charAt(0)?.toUpperCase()}
               </div>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#e2e8f0' }}>{selectedStudent.Name}</h3>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedStudent.Name}</h3>
                 <span className={selectedStudent.Role === 'Admin' ? 'badge badge-admin' : 'badge badge-student'}>
                   {selectedStudent.Role}
                 </span>
@@ -982,34 +982,34 @@ const AdminDashboard = () => {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
-              background: 'rgba(15, 23, 42, 0.4)',
+              background: 'var(--input-bg)',
               padding: '1rem',
               borderRadius: '0.5rem',
-              border: '1px solid rgba(99, 102, 241, 0.1)'
+              border: '1px solid var(--input-border)'
             }}>
               <div>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Email</span>
-                <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Email}</span>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Email</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{selectedStudent.Email}</span>
               </div>
               {selectedStudent.Role === 'Student' && (
                 <>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>StudentID</span>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>StudentID</span>
                     <span style={{ fontSize: '0.875rem', color: '#a5b4fc', fontFamily: 'monospace', fontWeight: 600 }}>{selectedStudent.StudentID || '—'}</span>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Department</span>
-                    <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Department || '—'}</span>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Department</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{selectedStudent.Department || '—'}</span>
                   </div>
                   <div>
-                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Phone</span>
-                    <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Phone || '—'}</span>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Phone</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-main)' }}>{selectedStudent.Phone || '—'}</span>
                   </div>
                 </>
               )}
               <div style={{ gridColumn: 'span 2' }}>
-                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Account Registered</span>
-                <span style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Account Registered</span>
+                <span style={{ fontSize: '0.875rem', color: 'var(--text-sub)' }}>
                   {new Date(selectedStudent.CreatedAt).toLocaleString()}
                 </span>
               </div>
@@ -1017,7 +1017,7 @@ const AdminDashboard = () => {
 
             {/* Borrow log list */}
             <div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.75rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.75rem' }}>
                 Borrowing Ledger
               </h4>
               <div style={{ maxHeight: '12rem', overflowY: 'auto', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: '0.5rem' }}>
@@ -1037,9 +1037,9 @@ const AdminDashboard = () => {
                       return (
                         <tr key={rec.RecordID}>
                           <td>
-                            <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{rec.Title}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{rec.Title}</span>
                             <br />
-                            <span style={{ fontSize: '0.65rem', color: '#64748b', fontFamily: 'monospace' }}>{rec.ISBN}</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{rec.ISBN}</span>
                           </td>
                           <td>{new Date(rec.IssueDate).toLocaleDateString()}</td>
                           <td style={{ color: isOverdue ? '#f87171' : undefined }}>{new Date(rec.DueDate).toLocaleDateString()}</td>
@@ -1077,7 +1077,7 @@ const AdminDashboard = () => {
                                 Return
                               </button>
                             ) : (
-                              <span style={{ color: '#64748b' }}>
+                              <span style={{ color: 'var(--text-muted)' }}>
                                 {rec.ReturnDate ? new Date(rec.ReturnDate).toLocaleDateString() : '—'}
                               </span>
                             )}
@@ -1087,7 +1087,7 @@ const AdminDashboard = () => {
                     })}
                     {selectedStudentHistory.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b' }}>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
                           No borrow history found for this student.
                         </td>
                       </tr>
