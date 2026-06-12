@@ -1,0 +1,5 @@
+# ============================================================
+# Cloud Lib — Procfile (Elastic Beanstalk entry point)
+# Tells Elastic Beanstalk how to start the Node.js app
+# ============================================================
+web: node server.js
