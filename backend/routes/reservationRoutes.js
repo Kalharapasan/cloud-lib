@@ -25,4 +25,7 @@ router.get('/all', verifyToken, requireRole('Admin'), getAllReservations);
 // Admin-only route to update status (Fulfill / Cancel)
 router.put('/:id/status', verifyToken, requireRole('Admin'), updateReservationStatus);
 
+router.put('/bulk/status', verifyToken, requireRole('Admin'), bulkUpdateStatus);
+router.get('/report', verifyToken, requireRole('Admin'), getReservationReport);
+
 module.exports = router;
