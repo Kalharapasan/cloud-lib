@@ -10,23 +10,32 @@ const StudentDashboard = () => {
   const { user } = useAuth();
   const [books, setBooks] = useState([]);
   const [history, setHistory] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [search, setSearch] = useState('');
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingReservations, setLoadingReservations] = useState(true);
 
   // Modal State
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBookModal, setShowBookModal] = useState(false);
+  const [actionMsg, setActionMsg] = useState({ text: '', type: '' });
 
   // Fetch books
   useEffect(() => {
     fetchBooks();
   }, []);
 
-  // Fetch borrow history
+  // Fetch borrow history & reservations
   useEffect(() => {
     fetchHistory();
+    fetchReservations();
   }, []);
+
+  const showMessage = (text, type = 'success') => {
+    setActionMsg({ text, type });
+    setTimeout(() => setActionMsg({ text: '', type: '' }), 4000);
+  };
 
   const fetchBooks = async (query = '') => {
     setLoadingBooks(true);
@@ -49,6 +58,29 @@ const StudentDashboard = () => {
       console.error('Failed to fetch history:', err);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const fetchReservations = async () => {
+    setLoadingReservations(true);
+    try {
+      const res = await API.get('/reservations/my');
+      setReservations(res.data.reservations);
+    } catch (err) {
+      console.error('Failed to fetch reservations:', err);
+    } finally {
+      setLoadingReservations(false);
+    }
+  };
+
+  const handleReserveBook = async (bookId) => {
+    try {
+      await API.post('/reservations', { bookId });
+      showMessage('Book reservation placed successfully!');
+      setShowBookModal(false);
+      fetchReservations();
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to reserve book.', 'error');
     }
   };
 
@@ -107,6 +139,22 @@ const StudentDashboard = () => {
             Browse the digital catalog and manage your borrowing records.
           </p>
         </div>
+
+        {/* Action Message */}
+        {actionMsg.text && (
+          <div className="animate-fade-in" style={{
+            padding: '0.75rem 1rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1.5rem',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            background: actionMsg.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
+            border: `1px solid ${actionMsg.type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(34,197,94,0.3)'}`,
+            color: actionMsg.type === 'error' ? '#f87171' : '#4ade80',
+          }}>
+            {actionMsg.type === 'error' ? '✗' : '✓'} {actionMsg.text}
+          </div>
+        )}
 
         {/* Stats Row */}
         <div style={{
@@ -261,6 +309,96 @@ const StudentDashboard = () => {
             </div>
           )}
         </div>
+
+        {/* ── Reservations Ledger ────────────────────────────── */}
+        <div className="glass-card" style={{ padding: '1.5rem', marginTop: '2rem' }}>
+          <h3 style={{
+            fontSize: '1.25rem',
+            fontWeight: 700,
+            color: 'var(--text-main)',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}>
+            🔔 My Book Reservations
+          </h3>
+
+          {loadingReservations ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              Loading reservations...
+            </div>
+          ) : reservations.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</p>
+              <p>You have no active book reservations.</p>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="table-glass">
+                <thead>
+                  <tr>
+                    <th>Book</th>
+                    <th>Author</th>
+                    <th>ISBN</th>
+                    <th>Requested On</th>
+                    <th>Status</th>
+                    <th>Action / Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reservations.map((res) => (
+                    <tr key={res.ReservationID}>
+                      <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{res.Title}</td>
+                      <td style={{ color: 'var(--text-sub)' }}>{res.Author}</td>
+                      <td style={{ fontFamily: 'monospace' }}>{res.ISBN}</td>
+                      <td>{new Date(res.RequestDate).toLocaleString()}</td>
+                      <td>
+                        <span className={`badge ${
+                          res.Status === 'Fulfilled' ? 'badge-returned' : 
+                          res.Status === 'Pending' ? 'badge-pending' : 'badge-out'
+                        }`}>
+                          {res.Status}
+                        </span>
+                      </td>
+                      <td>
+                        {res.Status === 'Pending' ? (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await API.put(`/reservations/${res.ReservationID}/status`, { status: 'Cancelled' });
+                                showMessage('Reservation cancelled successfully.');
+                                fetchReservations();
+                              } catch (err) {
+                                showMessage(err.response?.data?.error || 'Failed to cancel reservation.', 'error');
+                              }
+                            }}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#f87171',
+                              padding: '0.35rem 0.75rem',
+                              borderRadius: '0.375rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                            }}
+                          >
+                            Cancel Request
+                          </button>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>
+                            {res.Status === 'Fulfilled' ? 'Book Issued to You' : 'Reservation Cancelled'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Book Details Modal ─────────────────────────────── */}
@@ -366,16 +504,58 @@ const StudentDashboard = () => {
               return null;
             })()}
 
-            <button
-              className="btn-gradient"
-              style={{ width: '100%', padding: '0.75rem' }}
-              onClick={() => {
-                setShowBookModal(false);
-                setSelectedBook(null);
-              }}
-            >
-              Close Details
-            </button>
+            {/* Check Reservations */}
+            {(() => {
+              const hasReservation = reservations.find(r => r.BookID === selectedBook.BookID && r.Status === 'Pending');
+              if (hasReservation) {
+                return (
+                  <div style={{
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    background: 'rgba(99, 102, 241, 0.12)',
+                    border: '1px solid rgba(99, 102, 241, 0.3)',
+                    color: 'var(--text-main)',
+                  }}>
+                    <p style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      ⏳ Pending Reservation
+                    </p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>
+                      You have reserved this book. You will be notified when it becomes available.
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              {selectedBook.Quantity <= 0 && !reservations.find(r => r.BookID === selectedBook.BookID && r.Status === 'Pending') && (
+                <button
+                  className="btn-gradient"
+                  style={{ flex: 1, padding: '0.75rem' }}
+                  onClick={() => handleReserveBook(selectedBook.BookID)}
+                >
+                  Reserve Book 🔔
+                </button>
+              )}
+              <button
+                className="input-glass"
+                style={{ 
+                  flex: 1, 
+                  padding: '0.75rem', 
+                  textAlign: 'center', 
+                  cursor: 'pointer',
+                  border: '1px solid var(--card-border)',
+                  background: 'transparent'
+                }}
+                onClick={() => {
+                  setShowBookModal(false);
+                  setSelectedBook(null);
+                }}
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </Modal>
       )}

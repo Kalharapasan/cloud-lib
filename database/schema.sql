@@ -106,4 +106,23 @@ INSERT INTO Books (Title, Author, ISBN, Quantity, Status, Description, Category,
 ('Computer Networking', 'James Kurose', '978-0133594140', 6, 'Available', 'A top-down approach to computer networking, explaining protocols and architecture from the application layer down.', 'Networking', 'Pearson', 2012),
 ('Artificial Intelligence', 'Stuart Russell', '978-0136042594', 2, 'Available', 'The standard textbook on artificial intelligence, describing search, logic, machine learning, and neural networks.', 'Artificial Intelligence', 'Pearson', 2009),
 ('Operating System Concepts', 'Abraham Silberschatz', '978-1118063330', 4, 'Available', 'A core textbook on operating system design, covering processes, memory management, file systems, and security.', 'Operating Systems', 'Wiley', 2012)
+-- ============================================================
+-- 5. Reservations Table (Advanced Feature)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS Reservations (
+    ReservationID INT           AUTO_INCREMENT PRIMARY KEY,
+    UserID        INT           NOT NULL,
+    BookID        INT           NOT NULL,
+    RequestDate   TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    Status        ENUM('Pending', 'Fulfilled', 'Cancelled') NOT NULL DEFAULT 'Pending',
+    
+    CONSTRAINT fk_res_user FOREIGN KEY (UserID)
+        REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_res_book FOREIGN KEY (BookID)
+        REFERENCES Books(BookID) ON DELETE CASCADE ON UPDATE CASCADE,
+        
+    INDEX idx_res_status (Status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 ON DUPLICATE KEY UPDATE Title=Title;
+

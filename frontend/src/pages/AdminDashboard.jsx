@@ -9,7 +9,14 @@ const AdminDashboard = () => {
   const [books, setBooks] = useState([]);
   const [users, setUsers] = useState([]);
   const [records, setRecords] = useState([]);
+  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters for Book Inventory
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [publisherFilter, setPublisherFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   // Book form state
   const [showBookModal, setShowBookModal] = useState(false);
@@ -55,14 +62,16 @@ const AdminDashboard = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [booksRes, usersRes, recordsRes] = await Promise.all([
+      const [booksRes, usersRes, recordsRes, reservationsRes] = await Promise.all([
         API.get('/books'),
         API.get('/auth/users'),
         API.get('/borrow/all'),
+        API.get('/reservations/all'),
       ]);
       setBooks(booksRes.data.books);
       setUsers(usersRes.data.users);
       setRecords(recordsRes.data.records);
+      setReservations(reservationsRes.data.reservations);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
@@ -238,6 +247,7 @@ const AdminDashboard = () => {
   const availableBooks = books.filter(b => b.Status === 'Available').length;
   const pendingRecords = records.filter(r => r.ReturnStatus === 'Pending');
   const overdueRecords = pendingRecords.filter(r => new Date(r.DueDate) < new Date());
+  const pendingReservationsCount = reservations.filter(r => r.Status === 'Pending').length;
 
   if (loading) {
     return (
@@ -300,6 +310,7 @@ const AdminDashboard = () => {
           <StatsCard icon="✅" label="Available Titles" value={availableBooks} color="#22c55e" />
           <StatsCard icon="📋" label="Active Loans" value={pendingRecords.length} color="#f59e0b" />
           <StatsCard icon="⚠️" label="Overdue" value={overdueRecords.length} color="#ef4444" />
+          <StatsCard icon="🔔" label="Reservations" value={pendingReservationsCount} color="#ec4899" />
         </div>
 
         {/* Tabs */}
@@ -329,31 +340,116 @@ const AdminDashboard = () => {
           >
             🔄 Transaction Management
           </button>
-        </div>
+          <button
+            className={`tab-btn ${activeTab === 'rese          {activeTab === 'inventory' && (() => {
+            const categories = [...new Set(books.map(b => b.Category).filter(Boolean))];
+            const publishers = [...new Set(books.map(b => b.Publisher).filter(Boolean))];
+            const filteredBooks = books.filter((book) => {
+              const matchesSearch =
+                book.Title.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+                book.Author.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+                book.ISBN.toLowerCase().includes(inventorySearch.toLowerCase());
+              const matchesCategory = categoryFilter ? book.Category === categoryFilter : true;
+              const matchesPublisher = publisherFilter ? book.Publisher === publisherFilter : true;
+              const matchesStatus = statusFilter ? book.Status === statusFilter : true;
+              return matchesSearch && matchesCategory && matchesPublisher && matchesStatus;
+            });
 
-        {/* Tab Content */}
-        <div className="glass-card" style={{ padding: '1.5rem', borderTopLeftRadius: 0 }}>
+            return (
+              <div className="animate-fade-in">
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.25rem',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                    Book Inventory
+                  </h3>
+                  <button className="btn-gradient" onClick={openAddBook} id="btn-add-book">
+                    + Add New Book
+                  </button>
+                </div>
 
-          {/* ── TAB: Inventory ─────────────────────────────── */}
-          {activeTab === 'inventory' && (
-            <div className="animate-fade-in">
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.25rem',
-              }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  Book Inventory
-                </h3>
-                <button className="btn-gradient" onClick={openAddBook} id="btn-add-book">
-                  + Add New Book
-                </button>
-              </div>
+                {/* Filters Row */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))',
+                  gap: '1rem',
+                  marginBottom: '1.5rem',
+                  padding: '1rem',
+                  background: 'var(--card-bg-light)',
+                  borderRadius: '0.5rem',
+                  border: '1px solid var(--card-border-light)',
+                }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Search</label>
+                    <input
+                      type="text"
+                      className="input-glass"
+                      placeholder="Title, Author, ISBN..."
+                      value={inventorySearch}
+                      onChange={(e) => setInventorySearch(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Category</label>
+                    <select
+                      className="select-glass"
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Publisher</label>
+                    <select
+                      className="select-glass"
+                      value={publisherFilter}
+                      onChange={(e) => setPublisherFilter(e.target.value)}
+                    >
+                      <option value="">All Publishers</option>
+                      {publishers.map(pub => (
+                        <option key={pub} value={pub}>{pub}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-sub)', marginBottom: '0.25rem', fontWeight: 600 }}>Status</label>
+                    <select
+                      className="select-glass"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="Available">Available</option>
+                      <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div style={{ overflowX: 'auto' }}>
-                <table className="table-glass">
-                  <thead>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table-glass">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>ISBN</th>
+                        <th>Qty</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBooks.map((book) => (      <thead>
                     <tr>
                       <th>ID</th>
                       <th>Title</th>

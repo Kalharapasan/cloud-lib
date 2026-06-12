@@ -9,6 +9,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const borrowRoutes = require('./routes/borrowRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 const { startOverdueChecker } = require('./services/snsNotifier');
 
 const app = express();
@@ -52,6 +53,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/borrow', borrowRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {

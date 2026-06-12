@@ -3,7 +3,7 @@
 // ============================================================
 const express = require('express');
 const router = express.Router();
-const { issueBook, returnBook, getMyHistory, getAllRecords, getOverdueRecords } = require('../controllers/borrowController');
+const { issueBook, returnBook, getMyHistory, getAllRecords, getOverdueRecords, sendManualOverdueAlert } = require('../controllers/borrowController');
 const { verifyToken, requireRole } = require('../middleware/authMiddleware');
 
 // Student routes
@@ -14,5 +14,6 @@ router.post('/issue', verifyToken, requireRole('Admin'), issueBook);
 router.put('/return/:recordId', verifyToken, requireRole('Admin'), returnBook);
 router.get('/all', verifyToken, requireRole('Admin'), getAllRecords);
 router.get('/overdue', verifyToken, requireRole('Admin'), getOverdueRecords);
+router.post('/alert/:recordId', verifyToken, requireRole('Admin'), sendManualOverdueAlert);
 
 module.exports = router;

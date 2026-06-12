@@ -207,4 +207,49 @@ const getOverdueRecords = async (req, res) => {
   }
 };
 
-module.exports = { issueBook, returnBook, getMyHistory, getAllRecords, getOverdueRecords };
+const { publishOverdueNotification } = require('../services/snsNotifier');
+
+/**
+ * POST /api/borrow/alert/:recordId
+ * Manually trigger an overdue alert notification for a specific record (Admin only)
+ */
+const sendManualOverdueAlert = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+
+    // Fetch record details
+    const [records] = await pool.query(
+      `SELECT br.RecordID, br.DueDate, br.ReturnStatus,
+              u.Name AS UserName, u.Email AS UserEmail,
+              b.Title AS BookTitle,
+              DATEDIFF(CURDATE(), br.DueDate) AS DaysOverdue
+       FROM Borrow_Records br
+       JOIN Users u ON br.UserID = u.UserID
+       JOIN Books b ON br.BookID = b.BookID
+       WHERE br.RecordID = ?`,
+      [recordId]
+    );
+
+    if (records.length === 0) {
+      return res.status(404).json({ error: 'Borrow record not found.' });
+    }
+
+    const record = records[0];
+    if (record.ReturnStatus === 'Returned') {
+      return res.status(400).json({ error: 'Book has already been returned. Cannot send alert.' });
+    }
+    if (record.DaysOverdue <= 0) {
+      return res.status(400).json({ error: 'This book is not yet overdue.' });
+    }
+
+    // Call the SNS notifier
+    await publishOverdueNotification(record);
+
+    res.json({ message: `Overdue alert notification dispatched successfully to ${record.UserEmail}.` });
+  } catch (err) {
+    console.error('SendManualOverdueAlert error:', err.message);
+    res.status(500).json({ error: 'Failed to send overdue alert notification.' });
+  }
+};
+
+module.exports = { issueBook, returnBook, getMyHistory, getAllRecords, getOverdueRecords, sendManualOverdueAlert };
