@@ -10,6 +10,21 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [records, setRecords] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [reservationStats, setReservationStats] = useState(null);
+  const [reservationFilters, setReservationFilters] = useState({
+    status: '',
+    student: '',
+    book: '',
+    from: '',
+    to: '',
+  });
+  const [selectedReservationIds, setSelectedReservationIds] = useState([]);
+  const [reservationAction, setReservationAction] = useState({
+    open: false,
+    ids: [],
+    status: 'Fulfilled',
+    note: '',
+  });
   const [loading, setLoading] = useState(true);
 
   // Filters for Book Inventory
@@ -62,20 +77,115 @@ const AdminDashboard = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [booksRes, usersRes, recordsRes, reservationsRes] = await Promise.all([
+      const [booksRes, usersRes, recordsRes, reservationsRes, reservationStatsRes] = await Promise.all([
         API.get('/books'),
         API.get('/auth/users'),
         API.get('/borrow/all'),
         API.get('/reservations/all'),
+        API.get('/reservations/stats'),
       ]);
       setBooks(booksRes.data.books);
       setUsers(usersRes.data.users);
       setRecords(recordsRes.data.records);
       setReservations(reservationsRes.data.reservations);
+      setReservationStats(reservationStatsRes.data.stats);
     } catch (err) {
       console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshReservations = async () => {
+    try {
+      const params = Object.fromEntries(
+        Object.entries(reservationFilters).filter(([, value]) => value)
+      );
+      const [reservationsRes, reservationStatsRes] = await Promise.all([
+        API.get('/reservations/all', { params }),
+        API.get('/reservations/stats'),
+      ]);
+      setReservations(reservationsRes.data.reservations);
+      setReservationStats(reservationStatsRes.data.stats);
+      setSelectedReservationIds([]);
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to refresh reservations.', 'error');
+    }
+  };
+
+  const openReservationAction = (ids, status) => {
+    setReservationAction({
+      open: true,
+      ids,
+      status,
+      note: '',
+    });
+  };
+
+  const closeReservationAction = () => {
+    setReservationAction({
+      open: false,
+      ids: [],
+      status: 'Fulfilled',
+      note: '',
+    });
+  };
+
+  const submitReservationAction = async () => {
+    try {
+      if (reservationAction.ids.length > 1) {
+        await API.put('/reservations/bulk/status', {
+          ids: reservationAction.ids,
+          status: reservationAction.status,
+          note: reservationAction.note,
+        });
+      } else {
+        await API.put(`/reservations/${reservationAction.ids[0]}/status`, {
+          status: reservationAction.status,
+          note: reservationAction.note,
+        });
+      }
+      showMessage(`Reservation ${reservationAction.status.toLowerCase()} successfully.`);
+      closeReservationAction();
+      refreshReservations();
+      fetchAll();
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to update reservation.', 'error');
+    }
+  };
+
+  const toggleReservationSelection = (id) => {
+    setSelectedReservationIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id]
+    );
+  };
+
+  const selectVisibleReservations = () => {
+    const visibleIds = filteredReservations
+      .filter((reservation) => reservation.Status === 'Pending')
+      .map((reservation) => reservation.ReservationID);
+    setSelectedReservationIds(visibleIds);
+  };
+
+  const clearReservationSelection = () => {
+    setSelectedReservationIds([]);
+  };
+
+  const handleReservationReport = async () => {
+    try {
+      const res = await API.get('/reservations/report', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'reservation_report.json');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to download reservation report.', 'error');
     }
   };
 
@@ -248,6 +358,24 @@ const AdminDashboard = () => {
   const pendingRecords = records.filter(r => r.ReturnStatus === 'Pending');
   const overdueRecords = pendingRecords.filter(r => new Date(r.DueDate) < new Date());
   const pendingReservationsCount = reservations.filter(r => r.Status === 'Pending').length;
+  const filteredReservations = reservations.filter((reservation) => {
+    const matchesStatus = reservationFilters.status ? reservation.Status === reservationFilters.status : true;
+    const matchesStudent = reservationFilters.student
+      ? `${reservation.UserName} ${reservation.StudentID || ''}`.toLowerCase().includes(reservationFilters.student.toLowerCase())
+      : true;
+    const matchesBook = reservationFilters.book
+      ? `${reservation.Title} ${reservation.ISBN}`.toLowerCase().includes(reservationFilters.book.toLowerCase())
+      : true;
+    const requestDate = new Date(reservation.RequestDate);
+    const matchesFrom = reservationFilters.from ? requestDate >= new Date(reservationFilters.from) : true;
+    const matchesTo = reservationFilters.to ? requestDate <= new Date(`${reservationFilters.to}T23:59:59`) : true;
+    return matchesStatus && matchesStudent && matchesBook && matchesFrom && matchesTo;
+  });
+
+  const reservationStatusCounts = reservations.reduce((counts, reservation) => {
+    counts[reservation.Status] = (counts[reservation.Status] || 0) + 1;
+    return counts;
+  }, {});
 
   if (loading) {
     return (
