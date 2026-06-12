@@ -347,9 +347,9 @@ const AdminDashboard = () => {
           >
             📚 Reservations
           </button>
-          {activeTab === 'inventory' && (
-            const categories = [...new Set(books.map(b => b.Category).filter(Boolean))];
-            const publishers = [...new Set(books.map(b => b.Publisher).filter(Boolean))];
+          {activeTab === 'inventory' && (() => {
+            const categories = [...new Set(books.map((book) => book.Category).filter(Boolean))];
+            const publishers = [...new Set(books.map((book) => book.Publisher).filter(Boolean))];
             const filteredBooks = books.filter((book) => {
               const matchesSearch =
                 book.Title.toLowerCase().includes(inventorySearch.toLowerCase()) ||
@@ -455,20 +455,7 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredBooks.map((book) => (      <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Title</th>
-                      <th>Author</th>
-                      <th>Category</th>
-                      <th>ISBN</th>
-                      <th>Qty</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {books.map((book) => (
+                      {filteredBooks.map((book) => (
                       <tr key={book.BookID}>
                         <td style={{ color: 'var(--text-muted)' }}>#{book.BookID}</td>
                         <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{book.Title}</td>
@@ -527,7 +514,8 @@ const AdminDashboard = () => {
                 </table>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* ── TAB: Students ─────────────────────────────── */}
           {activeTab === 'students' && (

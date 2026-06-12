@@ -4,7 +4,12 @@
 //           templates, auto-expire, reporting & statistics
 // ============================================================
 const pool = require('../config/db');
-const nodemailer = require('nodemailer');
+let nodemailer = null;
+try {
+  nodemailer = require('nodemailer');
+} catch (err) {
+  console.warn('⚠️  [Email] nodemailer is not installed — email notifications will be disabled');
+}
 
 // ── Configuration ───────────────────────────────────────────
 const RESERVATION_TTL_DAYS = parseInt(process.env.RESERVATION_TTL_DAYS) || 7;
@@ -12,7 +17,7 @@ const RESERVATION_TTL_DAYS = parseInt(process.env.RESERVATION_TTL_DAYS) || 7;
 // ── Email Transporter (graceful fallback to console) ────────
 let transporter = null;
 try {
-  if (process.env.SMTP_HOST) {
+  if (nodemailer && process.env.SMTP_HOST) {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT) || 587,
