@@ -6,6 +6,54 @@ import BookCard from '../components/BookCard';
 import StatsCard from '../components/StatsCard';
 import Modal from '../components/Modal';
 
+const BookCover = ({ book }) => {
+  const cleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+  const initialSrc = book.CoverImage || (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-L.jpg?default=false` : null);
+  const [imgSrc, setImgSrc] = useState(initialSrc);
+  const [imgError, setImgError] = useState(!initialSrc);
+
+  useEffect(() => {
+    const newCleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+    const newSrc = book.CoverImage || (newCleanIsbn ? `https://covers.openlibrary.org/b/isbn/${newCleanIsbn}-L.jpg?default=false` : null);
+    setImgSrc(newSrc);
+    setImgError(!newSrc);
+  }, [book.CoverImage, book.ISBN]);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={imgSrc} 
+        alt={book.Title} 
+        style={{
+          height: '14rem',
+          objectFit: 'contain',
+          borderRadius: '0.5rem',
+          alignSelf: 'center',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+          background: 'rgba(0,0,0,0.1)',
+          padding: '0.25rem',
+        }}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div style={{
+      height: '10rem',
+      background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
+      borderRadius: '0.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '4rem',
+      width: '100%',
+    }}>
+      📖
+    </div>
+  );
+};
+
 const StudentDashboard = () => {
   const { user } = useAuth();
   const [books, setBooks] = useState([]);
@@ -412,18 +460,8 @@ const StudentDashboard = () => {
           title="Book Details"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '32rem' }}>
-            {/* Cover illustration simulation */}
-            <div style={{
-              height: '10rem',
-              background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)',
-              borderRadius: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '4rem',
-            }}>
-              📖
-            </div>
+            {/* Cover illustration / Image */}
+            <BookCover book={selectedBook} />
 
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedBook.Title}</h3>

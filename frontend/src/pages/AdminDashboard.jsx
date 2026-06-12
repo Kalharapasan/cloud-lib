@@ -4,6 +4,51 @@ import Navbar from '../components/Navbar';
 import StatsCard from '../components/StatsCard';
 import Modal from '../components/Modal';
 
+const BookThumbnail = ({ book }) => {
+  const cleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+  const initialSrc = book.CoverImage || (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-S.jpg?default=false` : null);
+  const [imgSrc, setImgSrc] = useState(initialSrc);
+  const [imgError, setImgError] = useState(!initialSrc);
+
+  useEffect(() => {
+    const newCleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+    const newSrc = book.CoverImage || (newCleanIsbn ? `https://covers.openlibrary.org/b/isbn/${newCleanIsbn}-S.jpg?default=false` : null);
+    setImgSrc(newSrc);
+    setImgError(!newSrc);
+  }, [book.CoverImage, book.ISBN]);
+
+  if (!imgError) {
+    return (
+      <img 
+        src={imgSrc} 
+        alt={book.Title} 
+        style={{ 
+          width: '2.25rem', 
+          height: '3.15rem', 
+          objectFit: 'cover', 
+          borderRadius: '4px', 
+          border: '1px solid rgba(255,255,255,0.1)' 
+        }} 
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div style={{ 
+      width: '2.25rem', 
+      height: '3.15rem', 
+      background: 'rgba(255,255,255,0.05)', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      borderRadius: '4px', 
+      border: '1px solid rgba(255,255,255,0.1)', 
+      fontSize: '1rem' 
+    }}>📖</div>
+  );
+};
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('inventory');
   const [books, setBooks] = useState([]);
@@ -44,7 +89,8 @@ const AdminDashboard = () => {
     description: '',
     category: '',
     publisher: '',
-    publishYear: ''
+    publishYear: '',
+    coverImage: ''
   });
 
   // User/Student form state
@@ -205,7 +251,8 @@ const AdminDashboard = () => {
       description: '',
       category: '',
       publisher: '',
-      publishYear: ''
+      publishYear: '',
+      coverImage: ''
     });
     setShowBookModal(true);
   };
@@ -221,6 +268,7 @@ const AdminDashboard = () => {
       category: book.Category || '',
       publisher: book.Publisher || '',
       publishYear: book.PublishYear || '',
+      coverImage: book.CoverImage || ''
     });
     setShowBookModal(true);
   };
@@ -585,7 +633,12 @@ const AdminDashboard = () => {
                       {filteredBooks.map((book) => (
                       <tr key={book.BookID}>
                         <td style={{ color: 'var(--text-muted)' }}>#{book.BookID}</td>
-                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{book.Title}</td>
+                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <BookThumbnail book={book} />
+                            <span>{book.Title}</span>
+                          </div>
+                        </td>
                         <td style={{ color: 'var(--text-sub)' }}>{book.Author}</td>
                         <td style={{ color: 'var(--table-th-text)' }}>{book.Category || '—'}</td>
                         <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{book.ISBN}</td>
@@ -1281,6 +1334,17 @@ const AdminDashboard = () => {
                 onChange={(e) => setBookForm({ ...bookForm, publishYear: e.target.value })}
                 placeholder="e.g. 2008"
                 id="book-publish-year"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Cover Image URL</label>
+              <input
+                type="text"
+                className="input-glass"
+                value={bookForm.coverImage}
+                onChange={(e) => setBookForm({ ...bookForm, coverImage: e.target.value })}
+                placeholder="https://example.com/cover.jpg"
+                id="book-cover-image"
               />
             </div>
             <div>

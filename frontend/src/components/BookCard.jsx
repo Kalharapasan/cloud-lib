@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const BookCard = ({ book, onClick }) => {
   const isAvailable = book.Status === 'Available';
   const coverColors = [
@@ -9,6 +11,18 @@ const BookCard = ({ book, onClick }) => {
     'linear-gradient(135deg, #10b981, #6366f1)',
   ];
   const colorIndex = (book.BookID || 0) % coverColors.length;
+
+  const cleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+  const initialSrc = book.CoverImage || (cleanIsbn ? `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg?default=false` : null);
+  const [imgSrc, setImgSrc] = useState(initialSrc);
+  const [imgError, setImgError] = useState(!initialSrc);
+
+  useEffect(() => {
+    const newCleanIsbn = book.ISBN ? book.ISBN.replace(/-/g, '') : '';
+    const newSrc = book.CoverImage || (newCleanIsbn ? `https://covers.openlibrary.org/b/isbn/${newCleanIsbn}-M.jpg?default=false` : null);
+    setImgSrc(newSrc);
+    setImgError(!newSrc);
+  }, [book.CoverImage, book.ISBN]);
 
   return (
     <div className="glass-card animate-fade-in" style={{
@@ -26,20 +40,38 @@ const BookCard = ({ book, onClick }) => {
       e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
     }}
     >
-      {/* Cover Gradient */}
+      {/* Cover Image or Gradient */}
       <div style={{
-        height: '8rem',
-        background: coverColors[colorIndex],
+        height: '10rem',
+        background: imgError ? coverColors[colorIndex] : 'rgba(0,0,0,0.2)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
+        overflow: 'hidden',
       }}>
-        <span style={{ fontSize: '3rem', opacity: 0.7 }}>📖</span>
+        {!imgError ? (
+          <img 
+            src={imgSrc} 
+            alt={book.Title} 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover',
+              transition: 'transform 0.5s ease',
+            }}
+            onError={() => setImgError(true)}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          />
+        ) : (
+          <span style={{ fontSize: '3rem', opacity: 0.7 }}>📖</span>
+        )}
         <div style={{
           position: 'absolute',
           top: '0.75rem',
           right: '0.75rem',
+          zIndex: 2,
         }}>
           <span className={isAvailable ? 'badge badge-available' : 'badge badge-out'}>
             {isAvailable ? '✓ Available' : '✗ Out of Stock'}

@@ -29,15 +29,6 @@ export default defineConfig({
     emptyOutDir: true,
     // Generate source maps so CloudWatch can show line numbers in errors
     sourcemap: false,
-    rollupOptions: {
-      output: {
-        // Split vendor code for better caching on CDN
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-        },
-      },
-    },
   },
 });
 
