@@ -14,7 +14,35 @@ const AdminDashboard = () => {
   // Book form state
   const [showBookModal, setShowBookModal] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
-  const [bookForm, setBookForm] = useState({ title: '', author: '', isbn: '', quantity: 0 });
+  const [bookForm, setBookForm] = useState({
+    title: '',
+    author: '',
+    isbn: '',
+    quantity: 0,
+    description: '',
+    category: '',
+    publisher: '',
+    publishYear: ''
+  });
+
+  // User/Student form state
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [studentForm, setStudentForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'Student',
+    studentId: '',
+    phone: '',
+    department: ''
+  });
+
+  // User/Student details modal state
+  const [showStudentDetailModal, setShowStudentDetailModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStudentHistory, setSelectedStudentHistory] = useState([]);
+  const [loadingStudentDetail, setLoadingStudentDetail] = useState(false);
 
   // Issue form state
   const [issueForm, setIssueForm] = useState({ userId: '', bookId: '', dueDays: 14 });
@@ -50,7 +78,16 @@ const AdminDashboard = () => {
   // ── Book CRUD ─────────────────────────────────────────────
   const openAddBook = () => {
     setEditingBook(null);
-    setBookForm({ title: '', author: '', isbn: '', quantity: 0 });
+    setBookForm({
+      title: '',
+      author: '',
+      isbn: '',
+      quantity: 0,
+      description: '',
+      category: '',
+      publisher: '',
+      publishYear: ''
+    });
     setShowBookModal(true);
   };
 
@@ -61,6 +98,10 @@ const AdminDashboard = () => {
       author: book.Author,
       isbn: book.ISBN,
       quantity: book.Quantity,
+      description: book.Description || '',
+      category: book.Category || '',
+      publisher: book.Publisher || '',
+      publishYear: book.PublishYear || '',
     });
     setShowBookModal(true);
   };
@@ -90,6 +131,82 @@ const AdminDashboard = () => {
       fetchAll();
     } catch (err) {
       showMessage(err.response?.data?.error || 'Failed to delete book.', 'error');
+    }
+  };
+
+  // ── User / Student CRUD ──────────────────────────────────
+  const openAddStudent = () => {
+    setEditingStudent(null);
+    setStudentForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'Student',
+      studentId: '',
+      phone: '',
+      department: ''
+    });
+    setShowStudentModal(true);
+  };
+
+  const openEditStudent = (student) => {
+    setEditingStudent(student);
+    setStudentForm({
+      name: student.Name,
+      email: student.Email,
+      password: '', // Blank by default, only updated if entered
+      role: student.Role,
+      studentId: student.StudentID || '',
+      phone: student.Phone || '',
+      department: student.Department || ''
+    });
+    setShowStudentModal(true);
+  };
+
+  const handleStudentSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...studentForm };
+      if (editingStudent) {
+        if (!payload.password) delete payload.password; // Do not send empty password
+        await API.put(`/auth/users/${editingStudent.UserID}`, payload);
+        showMessage('Student account updated successfully!');
+      } else {
+        await API.post('/auth/users', payload);
+        showMessage('Student account created successfully!');
+      }
+      setShowStudentModal(false);
+      fetchAll();
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to save student account.', 'error');
+    }
+  };
+
+  const handleDeleteStudent = async (userId) => {
+    if (!confirm('Are you sure you want to delete this student account? This will cascade-delete all their borrow records.')) return;
+    try {
+      await API.delete(`/auth/users/${userId}`);
+      showMessage('User account deleted.');
+      fetchAll();
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to delete user account.', 'error');
+    }
+  };
+
+  const viewStudentDetail = async (userId) => {
+    setLoadingStudentDetail(true);
+    setSelectedStudent(null);
+    setSelectedStudentHistory([]);
+    setShowStudentDetailModal(true);
+    try {
+      const res = await API.get(`/auth/users/${userId}`);
+      setSelectedStudent(res.data.user);
+      setSelectedStudentHistory(res.data.history);
+    } catch (err) {
+      showMessage(err.response?.data?.error || 'Failed to fetch student details.', 'error');
+      setShowStudentDetailModal(false);
+    } finally {
+      setLoadingStudentDetail(false);
     }
   };
 
@@ -199,6 +316,13 @@ const AdminDashboard = () => {
             📦 Inventory Management
           </button>
           <button
+            className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`}
+            onClick={() => setActiveTab('students')}
+            id="tab-students"
+          >
+            👥 Student Management
+          </button>
+          <button
             className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
             onClick={() => setActiveTab('transactions')}
             id="tab-transactions"
@@ -234,6 +358,7 @@ const AdminDashboard = () => {
                       <th>ID</th>
                       <th>Title</th>
                       <th>Author</th>
+                      <th>Category</th>
                       <th>ISBN</th>
                       <th>Qty</th>
                       <th>Status</th>
@@ -246,6 +371,7 @@ const AdminDashboard = () => {
                         <td style={{ color: '#64748b' }}>#{book.BookID}</td>
                         <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{book.Title}</td>
                         <td style={{ color: '#94a3b8' }}>{book.Author}</td>
+                        <td style={{ color: '#a5b4fc' }}>{book.Category || '—'}</td>
                         <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#64748b' }}>{book.ISBN}</td>
                         <td style={{ fontWeight: 700, color: book.Quantity > 0 ? '#a5b4fc' : '#f87171' }}>{book.Quantity}</td>
                         <td>
@@ -295,6 +421,136 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB: Students ─────────────────────────────── */}
+          {activeTab === 'students' && (
+            <div className="animate-fade-in">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.25rem',
+              }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e2e8f0' }}>
+                  Student Management
+                </h3>
+                <button className="btn-gradient" onClick={openAddStudent} id="btn-add-student">
+                  + Add New Student
+                </button>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table-glass">
+                  <thead>
+                    <tr>
+                      <th>Name / Email</th>
+                      <th>Student ID</th>
+                      <th>Department</th>
+                      <th>Phone</th>
+                      <th>Role</th>
+                      <th>Registered</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.UserID}>
+                        <td>
+                          <div>
+                            <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{u.Name}</span>
+                            <br />
+                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{u.Email}</span>
+                          </div>
+                        </td>
+                        <td>
+                          {u.StudentID ? (
+                            <span style={{ fontFamily: 'monospace', color: '#a5b4fc', fontWeight: 600 }}>{u.StudentID}</span>
+                          ) : (
+                            <span style={{ color: '#475569' }}>—</span>
+                          )}
+                        </td>
+                        <td>{u.Department || <span style={{ color: '#475569' }}>—</span>}</td>
+                        <td>{u.Phone || <span style={{ color: '#475569' }}>—</span>}</td>
+                        <td>
+                          <span className={u.Role === 'Admin' ? 'badge badge-admin' : 'badge badge-student'}>
+                            {u.Role}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                          {new Date(u.CreatedAt).toLocaleDateString()}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => viewStudentDetail(u.UserID)}
+                              style={{
+                                background: 'rgba(56,189,248,0.15)',
+                                border: '1px solid rgba(56,189,248,0.3)',
+                                color: '#38bdf8',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseOver={(e) => { e.target.style.background = 'rgba(56,189,248,0.3)'; }}
+                              onMouseOut={(e) => { e.target.style.background = 'rgba(56,189,248,0.15)'; }}
+                            >
+                              Details
+                            </button>
+                            <button
+                              onClick={() => openEditStudent(u)}
+                              style={{
+                                background: 'rgba(99,102,241,0.15)',
+                                border: '1px solid rgba(99,102,241,0.3)',
+                                color: '#a5b4fc',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseOver={(e) => { e.target.style.background = 'rgba(99,102,241,0.3)'; }}
+                              onMouseOut={(e) => { e.target.style.background = 'rgba(99,102,241,0.15)'; }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteStudent(u.UserID)}
+                              style={{
+                                background: 'rgba(239,68,68,0.15)',
+                                border: '1px solid rgba(239,68,68,0.3)',
+                                color: '#f87171',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseOver={(e) => { e.target.style.background = 'rgba(239,68,68,0.3)'; }}
+                              onMouseOut={(e) => { e.target.style.background = 'rgba(239,68,68,0.15)'; }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                          No users registered in the system.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -467,7 +723,7 @@ const AdminDashboard = () => {
         title={editingBook ? 'Edit Book' : 'Add New Book'}
       >
         <form onSubmit={handleBookSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '24rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Title</label>
               <input
@@ -516,11 +772,344 @@ const AdminDashboard = () => {
                 id="book-quantity"
               />
             </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Category</label>
+              <input
+                type="text"
+                className="input-glass"
+                value={bookForm.category}
+                onChange={(e) => setBookForm({ ...bookForm, category: e.target.value })}
+                placeholder="e.g. Programming, Databases"
+                id="book-category"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Publisher</label>
+              <input
+                type="text"
+                className="input-glass"
+                value={bookForm.publisher}
+                onChange={(e) => setBookForm({ ...bookForm, publisher: e.target.value })}
+                placeholder="Publisher name"
+                id="book-publisher"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Publish Year</label>
+              <input
+                type="number"
+                className="input-glass"
+                value={bookForm.publishYear}
+                onChange={(e) => setBookForm({ ...bookForm, publishYear: e.target.value })}
+                placeholder="e.g. 2008"
+                id="book-publish-year"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Description</label>
+              <textarea
+                className="input-glass"
+                style={{ resize: 'vertical', minHeight: '5rem' }}
+                value={bookForm.description}
+                onChange={(e) => setBookForm({ ...bookForm, description: e.target.value })}
+                placeholder="Brief summary of the book content"
+                id="book-description"
+              />
+            </div>
             <button type="submit" className="btn-gradient" style={{ marginTop: '0.5rem' }} id="btn-save-book">
               {editingBook ? 'Update Book' : 'Add Book'}
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* ── Student Modal ─────────────────────────────────────── */}
+      <Modal
+        isOpen={showStudentModal}
+        onClose={() => setShowStudentModal(false)}
+        title={editingStudent ? 'Edit User Details' : 'Add New Student'}
+      >
+        <form onSubmit={handleStudentSubmit}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: '24rem' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Full Name</label>
+              <input
+                type="text"
+                className="input-glass"
+                value={studentForm.name}
+                onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+                placeholder="Full name"
+                required
+                id="student-name"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Email Address</label>
+              <input
+                type="email"
+                className="input-glass"
+                value={studentForm.email}
+                onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
+                placeholder="email@university.edu"
+                required
+                id="student-email"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>
+                Password {editingStudent && <span style={{ color: '#64748b', fontSize: '0.7rem' }}>(Leave blank to keep current)</span>}
+              </label>
+              <input
+                type="password"
+                className="input-glass"
+                value={studentForm.password}
+                onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
+                placeholder="Password"
+                required={!editingStudent}
+                minLength={6}
+                id="student-password"
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Role</label>
+              <select
+                className="select-glass"
+                value={studentForm.role}
+                onChange={(e) => setStudentForm({ ...studentForm, role: e.target.value })}
+                required
+                id="student-role"
+              >
+                <option value="Student">Student</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+
+            {studentForm.role === 'Student' && (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Student ID</label>
+                  <input
+                    type="text"
+                    className="input-glass"
+                    value={studentForm.studentId}
+                    onChange={(e) => setStudentForm({ ...studentForm, studentId: e.target.value })}
+                    placeholder="STU-2026-XXX"
+                    required
+                    id="student-studentid"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Phone Number</label>
+                  <input
+                    type="text"
+                    className="input-glass"
+                    value={studentForm.phone}
+                    onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+                    placeholder="+1-555-XXXX"
+                    id="student-phone"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.375rem', fontWeight: 600 }}>Department</label>
+                  <input
+                    type="text"
+                    className="input-glass"
+                    value={studentForm.department}
+                    onChange={(e) => setStudentForm({ ...studentForm, department: e.target.value })}
+                    placeholder="e.g. Computer Science"
+                    id="student-department"
+                  />
+                </div>
+              </>
+            )}
+
+            <button type="submit" className="btn-gradient" style={{ marginTop: '0.5rem' }} id="btn-save-student">
+              {editingStudent ? 'Update Account' : 'Create Account'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Student Detail Modal ───────────────────────────────── */}
+      <Modal
+        isOpen={showStudentDetailModal}
+        onClose={() => {
+          setShowStudentDetailModal(false);
+          setSelectedStudent(null);
+          setSelectedStudentHistory([]);
+        }}
+        title="Student Profile & Loans"
+      >
+        {loadingStudentDetail ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+            Loading details...
+          </div>
+        ) : selectedStudent ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '40rem', maxWidth: '90vw' }}>
+            
+            {/* Header Detail */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid rgba(99, 102, 241, 0.15)'
+            }}>
+              <div style={{
+                width: '3.5rem',
+                height: '3.5rem',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #6366f1, #a78bfa)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                color: 'white',
+              }}>
+                {selectedStudent.Name?.charAt(0)?.toUpperCase()}
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#e2e8f0' }}>{selectedStudent.Name}</h3>
+                <span className={selectedStudent.Role === 'Admin' ? 'badge badge-admin' : 'badge badge-student'}>
+                  {selectedStudent.Role}
+                </span>
+              </div>
+            </div>
+
+            {/* Profile Grid Info */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '1rem',
+              background: 'rgba(15, 23, 42, 0.4)',
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid rgba(99, 102, 241, 0.1)'
+            }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Email</span>
+                <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Email}</span>
+              </div>
+              {selectedStudent.Role === 'Student' && (
+                <>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>StudentID</span>
+                    <span style={{ fontSize: '0.875rem', color: '#a5b4fc', fontFamily: 'monospace', fontWeight: 600 }}>{selectedStudent.StudentID || '—'}</span>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Department</span>
+                    <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Department || '—'}</span>
+                  </div>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Phone</span>
+                    <span style={{ fontSize: '0.875rem', color: '#e2e8f0' }}>{selectedStudent.Phone || '—'}</span>
+                  </div>
+                </>
+              )}
+              <div style={{ gridColumn: 'span 2' }}>
+                <span style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Account Registered</span>
+                <span style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>
+                  {new Date(selectedStudent.CreatedAt).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Borrow log list */}
+            <div>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#e2e8f0', marginBottom: '0.75rem' }}>
+                Borrowing Ledger
+              </h4>
+              <div style={{ maxHeight: '12rem', overflowY: 'auto', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: '0.5rem' }}>
+                <table className="table-glass" style={{ fontSize: '0.8rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Book / ISBN</th>
+                      <th>Issued</th>
+                      <th>Due</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedStudentHistory.map((rec) => {
+                      const isOverdue = rec.ReturnStatus === 'Pending' && new Date(rec.DueDate) < new Date();
+                      return (
+                        <tr key={rec.RecordID}>
+                          <td>
+                            <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{rec.Title}</span>
+                            <br />
+                            <span style={{ fontSize: '0.65rem', color: '#64748b', fontFamily: 'monospace' }}>{rec.ISBN}</span>
+                          </td>
+                          <td>{new Date(rec.IssueDate).toLocaleDateString()}</td>
+                          <td style={{ color: isOverdue ? '#f87171' : undefined }}>{new Date(rec.DueDate).toLocaleDateString()}</td>
+                          <td>
+                            <span className={`badge ${rec.ReturnStatus === 'Returned' ? 'badge-returned' : isOverdue ? 'badge-overdue' : 'badge-pending'}`}>
+                              {rec.ReturnStatus === 'Returned' ? 'Returned' : isOverdue ? 'Overdue' : 'Pending'}
+                            </span>
+                          </td>
+                          <td>
+                            {rec.ReturnStatus === 'Pending' ? (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await API.put(`/borrow/return/${rec.RecordID}`);
+                                    showMessage('Book marked as returned successfully!');
+                                    // Refresh history in modal and all dashboard stats
+                                    const detailsRes = await API.get(`/auth/users/${selectedStudent.UserID}`);
+                                    setSelectedStudentHistory(detailsRes.data.history);
+                                    fetchAll();
+                                  } catch (err) {
+                                    showMessage(err.response?.data?.error || 'Failed to return book.', 'error');
+                                  }
+                                }}
+                                style={{
+                                  background: 'rgba(34,197,94,0.15)',
+                                  border: '1px solid rgba(34,197,94,0.3)',
+                                  color: '#4ade80',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  cursor: 'pointer',
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Return
+                              </button>
+                            ) : (
+                              <span style={{ color: '#64748b' }}>
+                                {rec.ReturnDate ? new Date(rec.ReturnDate).toLocaleDateString() : '—'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {selectedStudentHistory.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b' }}>
+                          No borrow history found for this student.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <button
+              className="btn-gradient"
+              onClick={() => {
+                setShowStudentDetailModal(false);
+                setSelectedStudent(null);
+                setSelectedStudentHistory([]);
+              }}
+              style={{ width: '100%', padding: '0.75rem' }}
+            >
+              Close Details
+            </button>
+          </div>
+        ) : null}
       </Modal>
     </div>
   );
