@@ -2,6 +2,7 @@
 // Cloud Lib — Book Controller (CRUD + Search/Filter)
 // ============================================================
 const pool = require('../config/db');
+const { uploadBookCover } = require('../services/s3Service');
 
 /**
  * GET /api/books
@@ -182,4 +183,21 @@ const deleteBook = async (req, res) => {
   }
 };
 
-module.exports = { getAllBooks, getBookById, createBook, updateBook, deleteBook };
+/**
+ * POST /api/books/upload
+ * Upload a book cover image (Admin only)
+ */
+const uploadCoverImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded.' });
+    }
+    const imageUrl = await uploadBookCover(req.file, req);
+    res.json({ imageUrl });
+  } catch (err) {
+    console.error('UploadCoverImage error:', err.message);
+    res.status(500).json({ error: 'Failed to upload cover image.' });
+  }
+};
+
+module.exports = { getAllBooks, getBookById, createBook, updateBook, deleteBook, uploadCoverImage };

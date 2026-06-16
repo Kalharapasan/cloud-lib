@@ -148,6 +148,10 @@ echo "Schema applied successfully!"
    | `FRONTEND_URL` | *Your CloudFront HTTPS URL* |
    | `AWS_REGION` | `ap-southeast-1` |
    | `SNS_TOPIC_ARN` | *Your SNS topic ARN* |
+   | `S3_BUCKET_COVERS` | *Your S3 covers bucket name* |
+
+> [!TIP]
+> Make sure the EC2 instance profile for your Elastic Beanstalk (typically `aws-elasticbeanstalk-ec2-role`) has write access (e.g. `s3:PutObject`) to your covers S3 bucket. Alternatively, you can add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as Environment Properties.
 
 4. Note the **EB environment URL** — needed for `VITE_API_BASE_URL`
 

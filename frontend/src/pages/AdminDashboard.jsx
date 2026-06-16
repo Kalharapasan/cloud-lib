@@ -93,6 +93,11 @@ const AdminDashboard = () => {
     coverImage: ''
   });
 
+  // Image Upload State
+  const [imageUploadMode, setImageUploadMode] = useState('upload'); // 'upload' or 'url'
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadImageError, setUploadImageError] = useState('');
+
   // User/Student form state
   const [showStudentModal, setShowStudentModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -254,6 +259,9 @@ const AdminDashboard = () => {
       publishYear: '',
       coverImage: ''
     });
+    setImageUploadMode('upload');
+    setUploadImageError('');
+    setUploadingImage(false);
     setShowBookModal(true);
   };
 
@@ -270,7 +278,51 @@ const AdminDashboard = () => {
       publishYear: book.PublishYear || '',
       coverImage: book.CoverImage || ''
     });
+    setImageUploadMode(book.CoverImage ? 'url' : 'upload');
+    setUploadImageError('');
+    setUploadingImage(false);
     setShowBookModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadImageError('Only JPEG, JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadImageError('Image size must be less than 5MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setUploadImageError('');
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await API.post('/books/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      setBookForm((prev) => ({
+        ...prev,
+        coverImage: response.data.imageUrl,
+      }));
+      showMessage('Image uploaded successfully!');
+    } catch (err) {
+      console.error('File upload error:', err);
+      setUploadImageError(err.response?.data?.error || 'Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleBookSubmit = async (e) => {
@@ -1337,15 +1389,168 @@ const AdminDashboard = () => {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Cover Image URL</label>
-              <input
-                type="text"
-                className="input-glass"
-                value={bookForm.coverImage}
-                onChange={(e) => setBookForm({ ...bookForm, coverImage: e.target.value })}
-                placeholder="https://example.com/cover.jpg"
-                id="book-cover-image"
-              />
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.5rem', fontWeight: 600 }}>Cover Image</label>
+              
+              <div style={{
+                display: 'flex',
+                background: 'var(--input-bg)',
+                borderRadius: '0.5rem',
+                padding: '0.25rem',
+                border: '1px solid var(--input-border)',
+                marginBottom: '0.75rem'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => { setImageUploadMode('upload'); setUploadImageError(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '0.4rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    background: imageUploadMode === 'upload' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    color: imageUploadMode === 'upload' ? '#a5b4fc' : 'var(--text-sub)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  📤 Upload File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setImageUploadMode('url'); setUploadImageError(''); }}
+                  style={{
+                    flex: 1,
+                    padding: '0.4rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    borderRadius: '0.375rem',
+                    border: 'none',
+                    background: imageUploadMode === 'url' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    color: imageUploadMode === 'url' ? '#a5b4fc' : 'var(--text-sub)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  🔗 Image URL
+                </button>
+              </div>
+
+              {imageUploadMode === 'upload' ? (
+                <div>
+                  {bookForm.coverImage ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '0.75rem',
+                      background: 'rgba(99, 102, 241, 0.05)',
+                      borderRadius: '0.5rem',
+                      border: '1px dashed rgba(99, 102, 241, 0.3)',
+                    }}>
+                      <img 
+                        src={bookForm.coverImage} 
+                        alt="Uploaded Cover Preview" 
+                        style={{
+                          width: '3.5rem',
+                          height: '5rem',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          border: '1px solid rgba(255, 255, 255, 0.1)'
+                        }} 
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#4ade80', fontWeight: 600, marginBottom: '0.25rem' }}>✓ Uploaded successfully</span>
+                        <span style={{ 
+                          display: 'block', 
+                          fontSize: '0.65rem', 
+                          color: 'var(--text-muted)', 
+                          textOverflow: 'ellipsis', 
+                          overflow: 'hidden', 
+                          whiteSpace: 'nowrap' 
+                        }}>
+                          {bookForm.coverImage}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setBookForm({ ...bookForm, coverImage: '' })}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#f87171',
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            marginTop: '0.25rem',
+                            padding: 0,
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          Remove Image
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      style={{
+                        border: '2px dashed var(--input-border)',
+                        borderRadius: '0.625rem',
+                        padding: '1.5rem',
+                        textAlign: 'center',
+                        background: 'rgba(15, 23, 42, 0.2)',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.6)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)'; }}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          opacity: 0,
+                          cursor: 'pointer',
+                          width: '100%',
+                          height: '100%'
+                        }}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                          <div className="spinner"></div>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>Uploading cover image...</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.375rem' }}>
+                          <span style={{ fontSize: '1.5rem' }}>🖼️</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)' }}>Click to upload cover image</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PNG, JPEG, JPG, WEBP up to 5MB</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadImageError && (
+                    <span style={{ display: 'block', fontSize: '0.75rem', color: '#f87171', marginTop: '0.375rem', fontWeight: 600 }}>
+                      ⚠ {uploadImageError}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  className="input-glass"
+                  value={bookForm.coverImage}
+                  onChange={(e) => setBookForm({ ...bookForm, coverImage: e.target.value })}
+                  placeholder="https://example.com/cover.jpg"
+                  id="book-cover-image"
+                />
+              )}
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-sub)', marginBottom: '0.375rem', fontWeight: 600 }}>Description</label>

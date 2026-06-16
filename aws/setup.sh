@@ -22,6 +22,7 @@ APP_NAME="cloud-lib"
 ENV_NAME="cloud-lib-prod"
 S3_FRONTEND="cloud-lib-frontend-$(date +%s)"   # must be globally unique
 S3_EB_DEPLOY="cloud-lib-eb-deploy-$(date +%s)" # must be globally unique
+S3_COVERS="cloud-lib-covers-$(date +%s)"       # must be globally unique
 SNS_TOPIC_NAME="CloudLibOverdueAlerts"
 ALERT_EMAIL="${ALERT_EMAIL:-your-email@example.com}"  # change this!
 
@@ -58,6 +59,41 @@ aws s3api create-bucket \
   --create-bucket-configuration LocationConstraint="$AWS_REGION"
 
 echo -e "${GREEN}✅ EB deploy S3 bucket: $S3_EB_DEPLOY${NC}"
+
+# ── 2b. S3 Bucket: Book Covers ───────────────────────────────
+echo -e "${YELLOW}[2b/7] Creating S3 bucket for Book Cover Images...${NC}"
+aws s3api create-bucket \
+  --bucket "$S3_COVERS" \
+  --region "$AWS_REGION" \
+  --create-bucket-configuration LocationConstraint="$AWS_REGION"
+
+# Disable public access block to allow public read access
+aws s3api put-public-access-block \
+  --bucket "$S3_COVERS" \
+  --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+# Apply public read policy (getObject)
+POLICY_COVERS=\$(cat <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::${S3_COVERS}/*"
+    }
+  ]
+}
+EOF
+)
+
+aws s3api put-bucket-policy \
+  --bucket "$S3_COVERS" \
+  --policy "\$POLICY_COVERS"
+
+echo -e "${GREEN}✅ Covers S3 bucket: $S3_COVERS${NC}"
 
 # ── 3. CloudFront Distribution ─────────────────────────────────
 echo -e "${YELLOW}[3/7] Creating CloudFront distribution...${NC}"
@@ -190,6 +226,7 @@ echo ""
 echo "  AWS_REGION                = $AWS_REGION"
 echo "  S3_BUCKET_FRONTEND        = $S3_FRONTEND"
 echo "  S3_BUCKET_EB_DEPLOY       = $S3_EB_DEPLOY"
+echo "  S3_BUCKET_COVERS          = $S3_COVERS"
 echo "  CLOUDFRONT_DISTRIBUTION_ID = $CF_ID"
 echo "  EB_APPLICATION_NAME       = $APP_NAME"
 echo "  EB_ENVIRONMENT_NAME       = $ENV_NAME"
