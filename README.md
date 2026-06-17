@@ -89,6 +89,7 @@ You must have **Node.js v20+** and a running **MySQL database** server.
    cp .env.example .env
    ```
    Modify the `.env` variables (e.g. database credentials, JWT secret, ports).
+   *Note: For testing image uploads locally, no AWS setup is required. The system automatically falls back to saving uploads in the `backend/uploads/` directory. If you wish to test uploads directly to S3, add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `S3_BUCKET_COVERS` in `.env`.*
 4. Run the backend development server:
    ```bash
    npm run dev
@@ -146,6 +147,7 @@ We have written a shell script `aws/setup.sh` that provisions the storage (S3), 
    AWS_REGION                 = ap-southeast-1
    S3_BUCKET_FRONTEND         = cloud-lib-frontend-1749123456
    S3_BUCKET_EB_DEPLOY        = cloud-lib-eb-deploy-1749123457
+   S3_BUCKET_COVERS           = cloud-lib-covers-1749123458
    CLOUDFRONT_DISTRIBUTION_ID = E123456789ABCD
    EB_APPLICATION_NAME        = cloud-lib
    EB_ENVIRONMENT_NAME        = cloud-lib-prod
@@ -205,6 +207,10 @@ We will deploy the Node.js API to Elastic Beanstalk, which provisions and handle
    | `FRONTEND_URL` | `https://your-cloudfront-domain.cloudfront.net` |
    | `AWS_REGION` | `ap-southeast-1` |
    | `SNS_TOPIC_ARN` | *(Paste the SNS_TOPIC_ARN from Step 1)* |
+   | `S3_BUCKET_COVERS` | *(Paste the S3_BUCKET_COVERS from Step 1)* |
+
+> [!TIP]
+> Ensure the Elastic Beanstalk EC2 instance profile (normally `aws-elasticbeanstalk-ec2-role`) has permission to upload objects to the covers S3 bucket (`s3:PutObject`). Alternatively, you can add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` under Beanstalk environment properties.
 
 5. Create the environment. Once ready, copy the generated **Elastic Beanstalk Environment URL** (looks like `cloud-lib-prod.xxxxxx.ap-southeast-1.elasticbeanstalk.com`).
 
